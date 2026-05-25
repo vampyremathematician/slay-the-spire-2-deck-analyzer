@@ -4,7 +4,9 @@ A mid-run decision tool for **Slay the Spire 2** that tells you whether to pick 
 
 ## How It Works
 
-Input your current card counts across five categories:
+Select your character to auto-load your starting deck, then adjust counts as you add, remove, or transform cards throughout the run.
+
+### Card Categories
 
 | Category | What counts |
 |---|---|
@@ -20,13 +22,26 @@ The tool computes your deck composition against act-specific ratio targets and t
 - **When to skip** — when ratios are met or the deck is oversized
 - **Sub-type warnings** — missing AoE, no block, mitigation-heavy, etc.
 - **Dead card impact** — probability of drawing a curse or quest per hand
+- **Basics remaining** — how many starter Strikes and Defends are still in your deck
+
+## Character Starting Decks
+
+| Character | Strikes | Defends | Unique Starters |
+|---|---|---|---|
+| **Ironclad** | 5 | 4 | Bash |
+| **Silent** | 5 | 5 | Neutralize, Survivor |
+| **Defect** | 4 | 4 | Zap, Dualcast |
+| **Regent** | 4 | 4 | Falling Star, Venerate |
+| **Necrobinder** | 4 | 4 | Unleash, +1 |
+
+Strikes are auto-loaded as Single Target. Defends are auto-loaded as Block. Unique starters are left for you to categorize — not all builds use all cards the same way.
 
 ## Card Classification Rule
 
 > Count a card by what it does **on the turn you play it**.
 
-- Hegemony (15 dmg, stars next turn) → **Single Target** (stars are a bonus)
-- Venerate (gain Stars) → **Velocity** (pure resource gen, no immediate block or damage)
+- Hegemony (15 dmg, energy next turn) → **Single Target** (energy is a bonus)
+- Venerate (gain Stars) → **Velocity** (pure resource gen, no block or damage)
 - Guiding Star (12 dmg, draw 2) → **Single Target** (draw is a bonus)
 - Cloak of Stars (7 block) → **Block**
 
@@ -50,7 +65,15 @@ To host on GitHub Pages: push to a repo and enable Pages from Settings → Pages
 index.html   — structure
 style.css    — all styling
 app.js       — all logic
+README.md    — this file
 ```
+
+## Accessibility
+
+- No root font-size override — respects user browser settings
+- Smallest text: 0.75rem (12px at default). Body text: 0.875rem+ (14px+)
+- All spacing in rem/em, scales with zoom and user preferences
+- Borders and hairlines in px (visual, not spatial)
 
 ## License
 

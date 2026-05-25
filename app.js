@@ -44,15 +44,18 @@ const CHARACTERS = {
 
 let currentAct = 1;
 let currentChar = null;
+let basicMax = { st: 0, blk: 0 }; // starting values, set on character select
 
 const counts = {
-  st:    0,
-  aoe:   0,
-  blk:   0,
-  mit:   0,
-  vel:   0,
-  curse: 0,
-  quest: 0,
+  st:       0,
+  aoe:      0,
+  blk:      0,
+  mit:      0,
+  vel:      0,
+  curse:    0,
+  quest:    0,
+  basicSt:  0,
+  basicBlk: 0,
 };
 
 // ---------------------------------------------------------------------------
@@ -137,14 +140,20 @@ function startRun(charKey) {
 
   currentChar = charKey;
 
+  // Set basic card maximums
+  basicMax.st  = char.st;
+  basicMax.blk = char.blk;
+
   // Reset counts to starting deck
-  counts.st    = char.st;
-  counts.aoe   = 0;
-  counts.blk   = char.blk;
-  counts.mit   = 0;
-  counts.vel   = 0;
-  counts.curse = 0;
-  counts.quest = 0;
+  counts.st       = char.st;
+  counts.aoe      = 0;
+  counts.blk      = char.blk;
+  counts.mit      = 0;
+  counts.vel      = 0;
+  counts.curse    = 0;
+  counts.quest    = 0;
+  counts.basicSt  = char.st;
+  counts.basicBlk = char.blk;
 
   // Reset act
   currentAct = 1;
@@ -182,6 +191,11 @@ document.addEventListener("click", (e) => {
   const key   = btn.dataset.key;
   const delta = Number(btn.dataset.delta);
   counts[key] = Math.max(0, counts[key] + delta);
+
+  // Cap basics at their starting maximum
+  if (key === "basicSt")  counts.basicSt  = Math.min(counts.basicSt,  basicMax.st);
+  if (key === "basicBlk") counts.basicBlk = Math.min(counts.basicBlk, basicMax.blk);
+
   update();
 });
 
@@ -377,6 +391,16 @@ function buildAlerts(cfg, offense, defense, dead, total) {
       text:  dead >= 2
         ? `${dead} dead cards (~${pctHit}% per hand) — purge at shop ASAP.`
         : `1 dead card (~${pctHit}% per hand) — purge at next shop.`,
+    });
+  }
+
+  // Basics remaining
+  const basicsLeft = counts.basicSt + counts.basicBlk;
+  if (basicsLeft > 0) {
+    alerts.push({
+      level: "warn",
+      icon:  "🗑️",
+      text:  `${basicsLeft} basic card${basicsLeft > 1 ? "s" : ""} remaining (${counts.basicSt}S / ${counts.basicBlk}D) — remove when possible.`,
     });
   }
 

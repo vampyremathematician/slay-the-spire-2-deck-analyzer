@@ -492,6 +492,46 @@ body::before {
   gap: 0.35em;
 }
 
+/* ---------- Basics Tracker ---------- */
+
+.basics-tracker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.5em;
+}
+
+.basics-tracker__label {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  text-align: center;
+  margin-bottom: 0.3em;
+}
+
+.basics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35em;
+}
+
+.basic-card {
+  text-align: center;
+}
+
+.basic-card__name {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  display: block;
+  margin-bottom: 0.2em;
+}
+
+.basic-card__count {
+  color: var(--text-dim) !important;
+  font-size: 1.2rem !important;
+}
+
 /* ---------- Flowchart ---------- */
 
 .flowchart {
