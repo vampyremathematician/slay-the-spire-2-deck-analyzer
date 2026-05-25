@@ -135,17 +135,17 @@ function startRun(charKey) {
   // Reset all counts
   for (const key of Object.keys(counts)) counts[key] = 0;
 
-  // Set basics
-  counts.st       = char.basicSt + (char.extra.st || 0);
-  counts.blk      = char.basicBlk + (char.extra.blk || 0);
-  counts.basicSt  = char.basicSt;
-  counts.basicBlk = char.basicBlk;
-
-  // Set velocity extras
+  // Main grid = non-basic cards only (unique starters)
+  counts.st          = char.extra.st          || 0;
+  counts.blk         = char.extra.blk         || 0;
   counts.velDraw     = char.extra.velDraw     || 0;
   counts.velEnergy   = char.extra.velEnergy   || 0;
   counts.velPowers   = char.extra.velPowers   || 0;
   counts.velResource = char.extra.velResource || 0;
+
+  // Basics tracked separately
+  counts.basicSt  = char.basicSt;
+  counts.basicBlk = char.basicBlk;
 
   // Reset act
   currentAct = 1;
@@ -206,8 +206,8 @@ function velocityTotal() {
 function update() {
   const cfg = ACT_CONFIG[currentAct];
 
-  const offense    = counts.st + counts.aoe;
-  const defense    = counts.blk + counts.mit;
+  const offense    = counts.st + counts.aoe + counts.basicSt + counts.modSt;
+  const defense    = counts.blk + counts.mit + counts.basicBlk + counts.modBlk;
   const vel        = velocityTotal();
   const functional = offense + defense + vel;
   const dead       = counts.curse + counts.quest;
@@ -306,6 +306,8 @@ function renderTargetCell(key, actual, target, delta) {
 function buildAlerts(cfg, offense, defense, dead, total) {
   const alerts = [];
   const vel = velocityTotal();
+  const totalBlk = counts.blk + counts.basicBlk + counts.modBlk;
+  const totalSt  = counts.st + counts.basicSt + counts.modSt;
 
   // AoE
   if (offense > 0 && counts.aoe === 0)
@@ -314,10 +316,10 @@ function buildAlerts(cfg, offense, defense, dead, total) {
     alerts.push({ level: "warn", icon: "⚔️", text: `Only ${counts.aoe} AoE in ${offense} offense. Target ${cfg.aoeFloor}+.` });
 
   // Block
-  if (defense > 0 && counts.blk === 0)
+  if (defense > 0 && totalBlk === 0)
     alerts.push({ level: "critical", icon: "🛡️", text: "No block — mitigation alone won't stop damage." });
-  else if (defense >= 3 && counts.blk / defense < cfg.blockFloorPct)
-    alerts.push({ level: "warn", icon: "🛡️", text: `Block ${Math.round((counts.blk / defense) * 100)}% — need >${Math.round(cfg.blockFloorPct * 100)}%.` });
+  else if (defense >= 3 && totalBlk / defense < cfg.blockFloorPct)
+    alerts.push({ level: "warn", icon: "🛡️", text: `Block ${Math.round((totalBlk / defense) * 100)}% — need >${Math.round(cfg.blockFloorPct * 100)}%.` });
 
   // Mitigation
   if (defense > 0 && counts.mit === 0 && currentAct >= 2)
@@ -352,14 +354,15 @@ function renderAlerts(alerts) {
 // ---------------------------------------------------------------------------
 
 function subAdvice(type, cfg, offense, defense) {
+  const totalBlk = counts.blk + counts.basicBlk + counts.modBlk;
   if (type === "off") {
     if (counts.aoe === 0) return "Prioritize AoE.";
     if (offense >= 3 && counts.aoe / offense < cfg.aoeWarnPct) return "Lean AoE.";
     return "ST or AoE.";
   }
   if (type === "def") {
-    if (counts.blk === 0) return "Need block.";
-    if (defense >= 3 && counts.blk / defense < cfg.blockFloorPct) return "Lean block.";
+    if (totalBlk === 0) return "Need block.";
+    if (defense >= 3 && totalBlk / defense < cfg.blockFloorPct) return "Lean block.";
     if (counts.mit === 0 && currentAct >= 2) return "Lean mitigation.";
     return "Block or mitigation.";
   }
@@ -400,7 +403,10 @@ function renderPriorityList(needs, allMet) {
     let sub = "";
     if (n.delta > 0) {
       if (n.type === "off") sub = counts.aoe === 0 ? " → AoE" : "";
-      if (n.type === "def") sub = counts.blk === 0 ? " → Block" : (counts.mit === 0 && currentAct >= 2 ? " → Mit" : "");
+      if (n.type === "def") {
+        const tBlk = counts.blk + counts.basicBlk + counts.modBlk;
+        sub = tBlk === 0 ? " → Block" : (counts.mit === 0 && currentAct >= 2 ? " → Mit" : "");
+      }
     }
     li.innerHTML = `<span class="priority-rank">${i + 1}</span><span class="priority-tag priority-tag--${cls[n.type]}">${n.label}</span><span>${st}${sub}</span>`;
     list.appendChild(li);
