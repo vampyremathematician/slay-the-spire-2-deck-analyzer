@@ -152,12 +152,13 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  min-height: 80px;
   max-height: 100px;
   overflow-y: auto;
 }
 
 .alerts-area:empty {
-  display: none;
+  min-height: 80px;
 }
 
 .alert {
@@ -404,10 +405,14 @@ body::before {
 .verdict {
   border-radius: 7px;
   padding: 12px;
+  min-height: 80px;
   text-align: center;
   border: 2px solid var(--border);
   background: var(--surface);
   transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .verdict--pick-offense  { border-color: var(--offense);  box-shadow: 0 0 14px var(--offense-glow); }
