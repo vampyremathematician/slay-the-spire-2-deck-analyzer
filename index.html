@@ -8,10 +8,53 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="app">
 
-    <!-- Header -->
+  <!-- Splash Screen -->
+  <div class="splash" id="splash">
+    <div class="splash__inner">
+      <h1 class="splash__title">Deck Advisor</h1>
+      <p class="splash__sub">Slay the Spire 2</p>
+      <p class="splash__prompt">Choose your character</p>
+      <div class="char-grid" id="char-grid">
+        <button class="char-btn char-btn--ironclad" data-char="ironclad">
+          <span class="char-btn__icon">⚔️</span>
+          <span class="char-btn__name">Ironclad</span>
+          <span class="char-btn__info">5S / 4D / Bash</span>
+        </button>
+        <button class="char-btn char-btn--silent" data-char="silent">
+          <span class="char-btn__icon">🗡️</span>
+          <span class="char-btn__name">Silent</span>
+          <span class="char-btn__info">5S / 5D / Neutralize, Survivor</span>
+        </button>
+        <button class="char-btn char-btn--defect" data-char="defect">
+          <span class="char-btn__icon">⚡</span>
+          <span class="char-btn__name">Defect</span>
+          <span class="char-btn__info">4S / 4D / Zap, Dualcast</span>
+        </button>
+        <button class="char-btn char-btn--regent" data-char="regent">
+          <span class="char-btn__icon">👑</span>
+          <span class="char-btn__name">Regent</span>
+          <span class="char-btn__info">4S / 4D / Falling Star, Venerate</span>
+        </button>
+        <button class="char-btn char-btn--necrobinder" data-char="necrobinder">
+          <span class="char-btn__icon">💀</span>
+          <span class="char-btn__name">Necrobinder</span>
+          <span class="char-btn__info">4S / 4D / Unleash, +1</span>
+        </button>
+      </div>
+      <p class="splash__note">Strikes → Single Target &nbsp;·&nbsp; Defends → Block<br>Categorize unique starters yourself.</p>
+    </div>
+  </div>
+
+  <!-- Main App (hidden until character selected) -->
+  <div class="app hidden" id="app">
+
+    <!-- Header + New Run -->
     <header class="header">
+      <div class="header__top">
+        <button class="new-run-btn" id="new-run-btn">← New Run</button>
+        <span class="header__char" id="header-char"></span>
+      </div>
       <h1>Deck Advisor</h1>
       <span class="header__sub">Slay the Spire 2</span>
     </header>
@@ -197,7 +240,7 @@
         </div>
       </div>
 
-      <h3 class="breakdown__header" style="margin-top: 2px;">Pick Priority</h3>
+      <h3 class="breakdown__header">Pick Priority</h3>
       <ul class="priority-list" id="priority-list"></ul>
 
       <div class="tips" id="tips"></div>

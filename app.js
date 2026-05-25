@@ -3,15 +3,52 @@
    ========================================================================== */
 
 // ---------------------------------------------------------------------------
+// Character Starting Decks
+//
+//   Strikes → Single Target offense
+//   Defends → Block defense
+//   Unique starters are left for the player to categorize.
+// ---------------------------------------------------------------------------
+
+const CHARACTERS = {
+  ironclad: {
+    name: "Ironclad",
+    st: 5, blk: 4,
+    starters: "Bash",
+  },
+  silent: {
+    name: "Silent",
+    st: 5, blk: 5,
+    starters: "Neutralize, Survivor",
+  },
+  defect: {
+    name: "Defect",
+    st: 4, blk: 4,
+    starters: "Zap, Dualcast",
+  },
+  regent: {
+    name: "Regent",
+    st: 4, blk: 4,
+    starters: "Falling Star, Venerate",
+  },
+  necrobinder: {
+    name: "Necrobinder",
+    st: 4, blk: 4,
+    starters: "Unleash, +1",
+  },
+};
+
+// ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
 let currentAct = 1;
+let currentChar = null;
 
 const counts = {
-  st:    5,
+  st:    0,
   aoe:   0,
-  blk:   5,
+  blk:   0,
   mit:   0,
   vel:   0,
   curse: 0,
@@ -79,6 +116,53 @@ function setWidth(id, pct) {
 }
 
 // ---------------------------------------------------------------------------
+// Splash screen + New Run
+// ---------------------------------------------------------------------------
+
+document.getElementById("char-grid").addEventListener("click", (e) => {
+  const btn = e.target.closest(".char-btn");
+  if (!btn) return;
+  startRun(btn.dataset.char);
+});
+
+document.getElementById("new-run-btn").addEventListener("click", () => {
+  $("app").classList.add("hidden");
+  $("splash").classList.remove("hidden");
+  currentChar = null;
+});
+
+function startRun(charKey) {
+  const char = CHARACTERS[charKey];
+  if (!char) return;
+
+  currentChar = charKey;
+
+  // Reset counts to starting deck
+  counts.st    = char.st;
+  counts.aoe   = 0;
+  counts.blk   = char.blk;
+  counts.mit   = 0;
+  counts.vel   = 0;
+  counts.curse = 0;
+  counts.quest = 0;
+
+  // Reset act
+  currentAct = 1;
+  document.querySelectorAll(".act-btn").forEach((b, i) => {
+    b.classList.toggle("active", i === 0);
+  });
+
+  // Show character name in header
+  setText("header-char", char.name);
+
+  // Switch screens
+  $("splash").classList.add("hidden");
+  $("app").classList.remove("hidden");
+
+  update();
+}
+
+// ---------------------------------------------------------------------------
 // Event wiring
 // ---------------------------------------------------------------------------
 
@@ -115,12 +199,12 @@ function update() {
   const dead       = counts.curse + counts.quest;
   const total      = functional + dead;
 
-  // ---- Counter displays ----
+  // Counter displays
   for (const key of Object.keys(counts)) {
     setText(key + "-count", counts[key]);
   }
 
-  // ---- Deck size meta ----
+  // Deck size meta
   setText("deck-total", total);
   setText("deck-func", functional);
   setText("deck-target", `Target: ${cfg.deckMin}–${cfg.deckMax}`);
@@ -133,7 +217,7 @@ function update() {
     deadEl.textContent = "";
   }
 
-  // ---- Ratio bar ----
+  // Ratio bar
   const pctOff = total ? (offense / total) * 100 : 0;
   const pctDef = total ? (defense / total) * 100 : 0;
   const pctVel = total ? (counts.vel / total) * 100 : 0;
@@ -149,7 +233,7 @@ function update() {
   setText("pct-velocity", Math.round(pctVel) + "%");
   setText("pct-dead",     dead ? Math.round(pctDed) + "%" : "0%");
 
-  // ---- Ideal targets ----
+  // Ideal targets
   const idealMid  = Math.round((cfg.deckMin + cfg.deckMax) / 2);
   const reference = Math.max(functional, idealMid);
 
@@ -165,11 +249,11 @@ function update() {
   renderTargetCell("def", defense,    targetDef, deltaDef);
   renderTargetCell("vel", counts.vel, targetVel, deltaVel);
 
-  // ---- Alerts bar (consolidated) ----
+  // Alerts
   const alerts = buildAlerts(cfg, offense, defense, dead, total);
   renderAlerts(alerts);
 
-  // ---- Needs sorted by greatest gap ----
+  // Needs sorted
   const needs = [
     { type: "off", label: "Offense",  delta: deltaOff, icon: "⚔️" },
     { type: "def", label: "Defense",  delta: deltaDef, icon: "🛡️" },
@@ -181,22 +265,22 @@ function update() {
   const allMet      = deltaOff <= 0 && deltaDef <= 0 && deltaVel <= 0;
   const topNeed     = needs[0];
 
-  // ---- Verdict ----
+  // Verdict
   const verdict = resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense);
   renderVerdict(verdict);
 
-  // ---- Priority list ----
+  // Priority
   renderPriorityList(needs, allMet);
 
-  // ---- Flowchart ----
+  // Flowchart
   renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, alerts);
 
-  // ---- Tips ----
+  // Tips
   $("tips").innerHTML = cfg.tip;
 }
 
 // ---------------------------------------------------------------------------
-// Dead-draw probability (hypergeometric)
+// Dead-draw probability
 // ---------------------------------------------------------------------------
 
 function deadDrawProbability(functional, total) {
@@ -229,9 +313,7 @@ function renderTargetCell(key, actual, target, delta) {
 }
 
 // ---------------------------------------------------------------------------
-// Alerts — one consolidated list of everything worth flagging
-//
-//   level: "warn" | "critical" | "purge"
+// Alerts
 // ---------------------------------------------------------------------------
 
 function buildAlerts(cfg, offense, defense, dead, total) {
@@ -282,7 +364,7 @@ function buildAlerts(cfg, offense, defense, dead, total) {
     });
   }
 
-  // Dead cards / purge
+  // Dead cards
   if (dead > 0) {
     const probClean = deadDrawProbability(
       counts.st + counts.aoe + counts.blk + counts.mit + counts.vel,
@@ -317,7 +399,7 @@ function renderAlerts(alerts) {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-type advice (for verdict reason text)
+// Sub-type advice
 // ---------------------------------------------------------------------------
 
 function subAdvice(type, cfg, offense, defense) {
@@ -336,7 +418,7 @@ function subAdvice(type, cfg, offense, defense) {
 }
 
 // ---------------------------------------------------------------------------
-// Verdict — always a pick or skip
+// Verdict
 // ---------------------------------------------------------------------------
 
 function resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense) {
@@ -422,7 +504,6 @@ function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, a
   const steps  = [];
   const sizeOk = total >= cfg.deckMin && total <= cfg.deckMax;
 
-  // Step 1: Deck size
   steps.push({
     question:  `Deck ${total} — ${cfg.deckMin}–${cfg.deckMax}?`,
     answer:    isOversize ? `Over by ${total - cfg.deckMax}.` : isUndersize ? `Under by ${cfg.deckMin - total}.` : "In range.",
@@ -430,7 +511,6 @@ function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, a
     highlight: !sizeOk,
   });
 
-  // Step 2: Category ratios
   steps.push({
     question:  "Category ratios?",
     answer:    allMet ? "All met." : `Gap: ${topNeed.label} +${Math.max(0, topNeed.delta)}`,
@@ -438,7 +518,6 @@ function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, a
     highlight: !allMet,
   });
 
-  // Step 3: Sub-types (references the alerts bar)
   const realAlerts = alerts.filter((a) => a.level !== "purge");
   if (realAlerts.length > 0) {
     const worst = realAlerts.find((a) => a.level === "critical") || realAlerts[0];
@@ -457,7 +536,6 @@ function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, a
     });
   }
 
-  // Step 4: Action
   if (isOversize && allMet) {
     steps.push({ question: "Action?", answer: "SKIP. Full and balanced.", node: "active", highlight: true });
   } else if (allMet && !isUndersize) {
@@ -470,7 +548,6 @@ function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, a
     steps.push({ question: "Action?", answer: "SKIP unless upgrade.", node: "active", highlight: true });
   }
 
-  // Render
   $("flowchart").innerHTML = steps.map((step, i) => `
     <div class="flow-step">
       <div class="flow-node flow-node--${step.node}">${i + 1}</div>
@@ -484,7 +561,5 @@ function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, a
 }
 
 // ---------------------------------------------------------------------------
-// Boot
+// Boot — splash screen is visible by default, no update() until char selected
 // ---------------------------------------------------------------------------
-
-update();

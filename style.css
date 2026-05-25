@@ -80,6 +80,121 @@ body::before {
     radial-gradient(ellipse at 50% 90%, rgba(243, 156, 18, 0.02) 0%, transparent 50%);
 }
 
+.hidden { display: none !important; }
+
+/* ---------- Splash Screen ---------- */
+
+.splash {
+  position: relative;
+  z-index: 1;
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.splash__inner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2.5rem 1.5rem;
+}
+
+.splash__title {
+  font-family: "Cinzel", serif;
+  font-weight: 900;
+  font-size: 2rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-shadow: 0 0 1.25rem rgba(201, 168, 76, 0.2);
+  margin-bottom: 0.1em;
+}
+
+.splash__sub {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+}
+
+.splash__prompt {
+  font-family: "Cinzel", serif;
+  font-size: 1rem;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+/* Character grid */
+.char-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+@media (max-width: 28rem) {
+  .char-grid { grid-template-columns: 1fr; }
+}
+
+.char-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0.8em 0.5em;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.char-btn:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(201, 168, 76, 0.15);
+}
+
+/* Last button (odd) spans full width */
+.char-btn:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+  max-width: 50%;
+  justify-self: center;
+}
+
+.char-btn__icon { font-size: 1.6rem; }
+
+.char-btn__name {
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.char-btn__info {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+/* Character color accents */
+.char-btn--ironclad:hover { border-color: var(--offense); box-shadow: 0 0 12px var(--offense-glow); }
+.char-btn--silent:hover   { border-color: #27ae60; box-shadow: 0 0 12px rgba(39, 174, 96, 0.3); }
+.char-btn--defect:hover   { border-color: var(--defense); box-shadow: 0 0 12px var(--defense-glow); }
+.char-btn--regent:hover   { border-color: var(--velocity); box-shadow: 0 0 12px var(--velocity-glow); }
+.char-btn--necrobinder:hover { border-color: var(--purge); box-shadow: 0 0 12px var(--purge-glow); }
+
+.splash__note {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+
 /* ---------- App Shell ---------- */
 
 .app {
@@ -95,6 +210,39 @@ body::before {
 .header {
   text-align: center;
   margin-bottom: 0.625rem;
+}
+
+.header__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.3rem;
+}
+
+.new-run-btn {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.25em 0.6em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.new-run-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.header__char {
+  font-family: "Cinzel", serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .header h1 {
