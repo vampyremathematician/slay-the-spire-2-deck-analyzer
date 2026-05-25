@@ -592,6 +592,7 @@ body::before {
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 0.7em;
+  flex: 1;
 }
 
 .flow-step {
