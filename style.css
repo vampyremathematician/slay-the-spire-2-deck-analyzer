@@ -2,6 +2,7 @@
    STS2 Deck Advisor — Stylesheet
 
    Units strategy:
+     %    — root font-size (multiplies user's browser preference, not replaces)
      rem  — layout spacing (margins, gaps, padding between sections)
      em   — component-internal spacing (scales with local font-size)
      px   — borders, hairlines, box-shadows, border-radius (visual, not spatial)
@@ -61,6 +62,10 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+}
+
+html {
+  font-size: 137.5%;
 }
 
 /* ---------- Base ---------- */
