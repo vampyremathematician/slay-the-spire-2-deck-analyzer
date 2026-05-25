@@ -146,30 +146,18 @@ body::before {
   box-shadow: 0 0 8px rgba(201, 168, 76, 0.1);
 }
 
-/* ---------- Top Row (Alerts + Verdict) ---------- */
+/* ---------- Alerts (inside left column) ---------- */
 
-.top-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
-  align-items: start;
-}
-
-@media (max-width: 700px) {
-  .top-row { grid-template-columns: 1fr; }
-}
-
-/* Alerts column — fixed height, scrolls if overflowing */
-.alerts-col {
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-.alerts {
+.alerts-area {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.alerts-area:empty {
+  display: none;
 }
 
 .alert {
@@ -182,21 +170,18 @@ body::before {
   line-height: 1.3;
 }
 
-/* Warning (orange) */
 .alert--warn {
   background: rgba(230, 126, 34, 0.1);
   border: 1px solid rgba(230, 126, 34, 0.35);
   color: var(--warn);
 }
 
-/* Critical (red) */
 .alert--critical {
   background: rgba(231, 76, 60, 0.1);
   border: 1px solid rgba(231, 76, 60, 0.35);
   color: var(--offense);
 }
 
-/* Purge (purple) */
 .alert--purge {
   background: var(--purge-glow);
   border: 1px solid var(--purge);
@@ -206,12 +191,6 @@ body::before {
 .alert__icon {
   font-size: 0.75rem;
   flex-shrink: 0;
-}
-
-/* Verdict column */
-.verdict-col {
-  display: flex;
-  align-items: stretch;
 }
 
 /* ---------- Two-Column Layout ---------- */
@@ -429,10 +408,6 @@ body::before {
   border: 2px solid var(--border);
   background: var(--surface);
   transition: all 0.3s;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 .verdict--pick-offense  { border-color: var(--offense);  box-shadow: 0 0 14px var(--offense-glow); }
