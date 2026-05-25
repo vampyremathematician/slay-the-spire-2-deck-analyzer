@@ -20,12 +20,6 @@ const counts = {
 
 // ---------------------------------------------------------------------------
 // Per-Act Configuration
-//
-//   deckMin / deckMax   — target functional deck size range
-//   offensePct / etc.   — ideal ratio of functional cards
-//   aoeFloor            — minimum AoE cards before warning
-//   aoeWarnPct          — AoE share of offense below which we warn
-//   blockFloorPct       — block share of defense below which we warn
 // ---------------------------------------------------------------------------
 
 const ACT_CONFIG = {
@@ -35,8 +29,8 @@ const ACT_CONFIG = {
     offensePct:  0.45,
     defensePct:  0.35,
     velocityPct: 0.20,
-    aoeFloor:     1,
-    aoeWarnPct:   0.15,
+    aoeFloor:      1,
+    aoeWarnPct:    0.15,
     blockFloorPct: 0.55,
     tip: `<strong>Act I:</strong> Front-loaded ST damage first.
           At least 1 AoE by mid-act. Block > mitigation early.
@@ -48,8 +42,8 @@ const ACT_CONFIG = {
     offensePct:  0.38,
     defensePct:  0.38,
     velocityPct: 0.24,
-    aoeFloor:     2,
-    aoeWarnPct:   0.25,
+    aoeFloor:      2,
+    aoeWarnPct:    0.25,
     blockFloorPct: 0.50,
     tip: `<strong>Act II:</strong> Multi-enemy fights get nasty — need real AoE.
           Balance block + mitigation. Add velocity to cycle.
@@ -61,8 +55,8 @@ const ACT_CONFIG = {
     offensePct:  0.35,
     defensePct:  0.38,
     velocityPct: 0.27,
-    aoeFloor:     2,
-    aoeWarnPct:   0.25,
+    aoeFloor:      2,
+    aoeWarnPct:    0.25,
     blockFloorPct: 0.45,
     tip: `<strong>Act III:</strong> Deck should be built. Velocity matters most.
           Only strict upgrades. Both block and mitigation online.
@@ -139,17 +133,6 @@ function update() {
     deadEl.textContent = "";
   }
 
-  // ---- Purge reminder ----
-  const purgeBox = $("purge-reminder");
-  if (dead > 0) {
-    purgeBox.classList.remove("hidden");
-    $("purge-text").textContent = dead >= 2
-      ? `${dead} dead cards — purge at shop ASAP. Every dead draw costs you.`
-      : "1 dead card in deck — purge at next shop opportunity.";
-  } else {
-    purgeBox.classList.add("hidden");
-  }
-
   // ---- Ratio bar ----
   const pctOff = total ? (offense / total) * 100 : 0;
   const pctDef = total ? (defense / total) * 100 : 0;
@@ -167,7 +150,7 @@ function update() {
   setText("pct-dead",     dead ? Math.round(pctDed) + "%" : "0%");
 
   // ---- Ideal targets ----
-  const idealMid = Math.round((cfg.deckMin + cfg.deckMax) / 2);
+  const idealMid  = Math.round((cfg.deckMin + cfg.deckMax) / 2);
   const reference = Math.max(functional, idealMid);
 
   const targetOff = Math.round(reference * cfg.offensePct);
@@ -182,9 +165,9 @@ function update() {
   renderTargetCell("def", defense,    targetDef, deltaDef);
   renderTargetCell("vel", counts.vel, targetVel, deltaVel);
 
-  // ---- Sub-type warnings ----
-  const warnings = buildSubWarnings(cfg, offense, defense, dead, total);
-  renderSubWarnings(warnings);
+  // ---- Alerts bar (consolidated) ----
+  const alerts = buildAlerts(cfg, offense, defense, dead, total);
+  renderAlerts(alerts);
 
   // ---- Needs sorted by greatest gap ----
   const needs = [
@@ -193,27 +176,27 @@ function update() {
     { type: "vel", label: "Velocity", delta: deltaVel, icon: "⚡" },
   ].sort((a, b) => b.delta - a.delta);
 
-  const isOversize = total > cfg.deckMax;
+  const isOversize  = total > cfg.deckMax;
   const isUndersize = functional < cfg.deckMin;
-  const allMet = deltaOff <= 0 && deltaDef <= 0 && deltaVel <= 0;
-  const topNeed = needs[0];
+  const allMet      = deltaOff <= 0 && deltaDef <= 0 && deltaVel <= 0;
+  const topNeed     = needs[0];
 
   // ---- Verdict ----
-  const verdict = resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed);
+  const verdict = resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense);
   renderVerdict(verdict);
 
   // ---- Priority list ----
   renderPriorityList(needs, allMet);
 
   // ---- Flowchart ----
-  renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, warnings);
+  renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, alerts);
 
   // ---- Tips ----
   $("tips").innerHTML = cfg.tip;
 }
 
 // ---------------------------------------------------------------------------
-// Dead-draw probability (hypergeometric: P(all 5 draws are clean))
+// Dead-draw probability (hypergeometric)
 // ---------------------------------------------------------------------------
 
 function deadDrawProbability(functional, total) {
@@ -246,52 +229,95 @@ function renderTargetCell(key, actual, target, delta) {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-type warnings
+// Alerts — one consolidated list of everything worth flagging
+//
+//   level: "warn" | "critical" | "purge"
 // ---------------------------------------------------------------------------
 
-function buildSubWarnings(cfg, offense, defense, dead, total) {
-  const w = [];
+function buildAlerts(cfg, offense, defense, dead, total) {
+  const alerts = [];
 
-  // AoE checks
+  // AoE
   if (offense > 0 && counts.aoe === 0) {
-    w.push({ text: "No AoE — multi fights will stall.", critical: currentAct >= 2 });
+    alerts.push({
+      level: currentAct >= 2 ? "critical" : "warn",
+      icon:  "⚔️",
+      text:  "No AoE — multi-enemy fights will stall.",
+    });
   } else if (offense >= 3 && counts.aoe < cfg.aoeFloor) {
-    w.push({ text: `Only ${counts.aoe} AoE in ${offense} offense. Target ${cfg.aoeFloor}+.`, critical: false });
+    alerts.push({
+      level: "warn",
+      icon:  "⚔️",
+      text:  `Only ${counts.aoe} AoE in ${offense} offense. Target ${cfg.aoeFloor}+.`,
+    });
   } else if (offense >= 4 && counts.aoe / offense < cfg.aoeWarnPct) {
-    w.push({ text: `AoE ${Math.round((counts.aoe / offense) * 100)}% — below ~${Math.round(cfg.aoeWarnPct * 100)}%.`, critical: false });
+    alerts.push({
+      level: "warn",
+      icon:  "⚔️",
+      text:  `AoE at ${Math.round((counts.aoe / offense) * 100)}% — below ~${Math.round(cfg.aoeWarnPct * 100)}%.`,
+    });
   }
 
-  // Block checks
+  // Block
   if (defense > 0 && counts.blk === 0) {
-    w.push({ text: "No block — mitigation alone won't stop hits.", critical: true });
+    alerts.push({
+      level: "critical",
+      icon:  "🛡️",
+      text:  "No block — mitigation alone won't stop damage.",
+    });
   } else if (defense >= 3 && counts.blk / defense < cfg.blockFloorPct) {
-    w.push({ text: `Block ${Math.round((counts.blk / defense) * 100)}% of defense — need >${Math.round(cfg.blockFloorPct * 100)}%.`, critical: false });
+    alerts.push({
+      level: "warn",
+      icon:  "🛡️",
+      text:  `Block is ${Math.round((counts.blk / defense) * 100)}% of defense — need >${Math.round(cfg.blockFloorPct * 100)}%.`,
+    });
   }
 
-  // Mitigation check
+  // Mitigation
   if (defense > 0 && counts.mit === 0 && currentAct >= 2) {
-    w.push({ text: "No mitigation — pure block overwhelmed late.", critical: false });
+    alerts.push({
+      level: "warn",
+      icon:  "🛡️",
+      text:  "No mitigation — pure block gets overwhelmed late.",
+    });
   }
 
-  // Dead cards
+  // Dead cards / purge
   if (dead > 0) {
-    w.push({ text: `${dead} dead card${dead > 1 ? "s" : ""} diluting draws.`, critical: dead >= 2 || total <= 15 });
+    const probClean = deadDrawProbability(
+      counts.st + counts.aoe + counts.blk + counts.mit + counts.vel,
+      total,
+    );
+    const pctHit = Math.round((1 - probClean) * 100);
+    alerts.push({
+      level: "purge",
+      icon:  "🔥",
+      text:  dead >= 2
+        ? `${dead} dead cards (~${pctHit}% per hand) — purge at shop ASAP.`
+        : `1 dead card (~${pctHit}% per hand) — purge at next shop.`,
+    });
   }
 
-  return w;
+  return alerts;
 }
 
-function renderSubWarnings(warnings) {
-  $("sub-warnings").innerHTML = warnings.map((w) =>
-    `<div class="sub-warning${w.critical ? " sub-warning--critical" : ""}">
-       <span class="sub-warning__icon">${w.critical ? "✕" : "⚠"}</span>
-       <span>${w.text}</span>
+function renderAlerts(alerts) {
+  const container = $("alerts");
+  if (alerts.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  container.innerHTML = alerts.map((a) =>
+    `<div class="alert alert--${a.level}">
+       <span class="alert__icon">${a.icon}</span>
+       <span>${a.text}</span>
      </div>`
   ).join("");
 }
 
 // ---------------------------------------------------------------------------
-// Sub-type advice (used in verdict reason text)
+// Sub-type advice (for verdict reason text)
 // ---------------------------------------------------------------------------
 
 function subAdvice(type, cfg, offense, defense) {
@@ -310,13 +336,10 @@ function subAdvice(type, cfg, offense, defense) {
 }
 
 // ---------------------------------------------------------------------------
-// Verdict logic — always returns a pick or skip, never "purge"
+// Verdict — always a pick or skip
 // ---------------------------------------------------------------------------
 
-function resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed) {
-  const offense = counts.st + counts.aoe;
-  const defense = counts.blk + counts.mit;
-
+function resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense) {
   if (total === 0) {
     return { cls: "pick-offense", icon: "⚔️", title: "Add Cards", reason: "Empty deck — start with damage." };
   }
@@ -344,8 +367,8 @@ function resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed) {
 
 function renderVerdict(v) {
   $("verdict").className = `verdict verdict--${v.cls}`;
-  setText("verdict-icon", v.icon);
-  setText("verdict-title", v.title);
+  setText("verdict-icon",   v.icon);
+  setText("verdict-title",  v.title);
   setText("verdict-reason", v.reason);
 }
 
@@ -382,7 +405,6 @@ function renderPriorityList(needs, allMet) {
     list.appendChild(li);
   });
 
-  // Skip entry
   const skipLi = document.createElement("li");
   skipLi.className = "priority-list__item--skip";
   skipLi.innerHTML = `
@@ -396,32 +418,43 @@ function renderPriorityList(needs, allMet) {
 // Flowchart
 // ---------------------------------------------------------------------------
 
-function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, warnings) {
-  const steps = [];
+function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, alerts) {
+  const steps  = [];
   const sizeOk = total >= cfg.deckMin && total <= cfg.deckMax;
 
   // Step 1: Deck size
   steps.push({
-    question: `Deck ${total} — ${cfg.deckMin}–${cfg.deckMax}?`,
-    answer:   isOversize ? `Over by ${total - cfg.deckMax}.` : isUndersize ? `Under by ${cfg.deckMin - total}.` : "In range.",
-    node:     sizeOk ? "yes" : "no",
+    question:  `Deck ${total} — ${cfg.deckMin}–${cfg.deckMax}?`,
+    answer:    isOversize ? `Over by ${total - cfg.deckMax}.` : isUndersize ? `Under by ${cfg.deckMin - total}.` : "In range.",
+    node:      sizeOk ? "yes" : "no",
     highlight: !sizeOk,
   });
 
   // Step 2: Category ratios
   steps.push({
-    question: "Category ratios?",
-    answer:   allMet ? "All met." : `Gap: ${topNeed.label} +${Math.max(0, topNeed.delta)}`,
-    node:     allMet ? "yes" : "no",
+    question:  "Category ratios?",
+    answer:    allMet ? "All met." : `Gap: ${topNeed.label} +${Math.max(0, topNeed.delta)}`,
+    node:      allMet ? "yes" : "no",
     highlight: !allMet,
   });
 
-  // Step 3: Sub-type balance
-  if (warnings.length > 0) {
-    const worst = warnings.find((w) => w.critical) || warnings[0];
-    steps.push({ question: "Sub-types?", answer: worst.text, node: worst.critical ? "no" : "warn", highlight: true });
+  // Step 3: Sub-types (references the alerts bar)
+  const realAlerts = alerts.filter((a) => a.level !== "purge");
+  if (realAlerts.length > 0) {
+    const worst = realAlerts.find((a) => a.level === "critical") || realAlerts[0];
+    steps.push({
+      question:  "Sub-types?",
+      answer:    worst.text,
+      node:      worst.level === "critical" ? "no" : "warn",
+      highlight: true,
+    });
   } else {
-    steps.push({ question: "Sub-types?", answer: "ST/AoE + Block/Mit OK.", node: "yes", highlight: false });
+    steps.push({
+      question:  "Sub-types?",
+      answer:    "ST/AoE + Block/Mit OK.",
+      node:      "yes",
+      highlight: false,
+    });
   }
 
   // Step 4: Action

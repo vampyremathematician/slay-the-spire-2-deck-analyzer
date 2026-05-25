@@ -23,6 +23,9 @@
       <button class="act-btn" data-act="3">Act III</button>
     </nav>
 
+    <!-- Alerts Bar (full width, always visible) -->
+    <div class="alerts" id="alerts"></div>
+
     <!-- Two-Column Layout -->
     <div class="main-cols">
 
@@ -35,7 +38,6 @@
           <div class="grid-header grid-header--defense">Defense</div>
           <div class="grid-header grid-header--velocity">Velocity</div>
 
-          <!-- Row 2: Single Target, Block, Velocity (spans 2 rows) -->
           <div class="grid-cell grid-cell--st">
             <div class="input-card input-card--st">
               <div class="input-card__label">
@@ -78,7 +80,6 @@
             </div>
           </div>
 
-          <!-- Row 3: AoE, Mitigation -->
           <div class="grid-cell grid-cell--aoe">
             <div class="input-card input-card--aoe">
               <div class="input-card__label">
@@ -144,10 +145,6 @@
           <div class="verdict__title" id="verdict-title">Pick Offense</div>
           <div class="verdict__reason" id="verdict-reason"></div>
         </div>
-        <div class="purge-reminder hidden" id="purge-reminder">
-          <span class="purge-reminder__icon">🔥</span>
-          <span id="purge-text">Purge dead cards at the next shop.</span>
-        </div>
       </section>
     </div>
 
@@ -201,8 +198,6 @@
           <div class="target-cell__diff" id="target-diff-vel"></div>
         </div>
       </div>
-
-      <div class="sub-warnings" id="sub-warnings"></div>
 
       <h3 class="breakdown__header" style="margin-top: 2px;">Pick Priority</h3>
       <ul class="priority-list" id="priority-list"></ul>
