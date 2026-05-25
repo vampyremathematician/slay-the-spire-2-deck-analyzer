@@ -825,3 +825,37 @@ body::before {
 }
 
 .tips strong { color: var(--accent); }
+
+/* ---------- Footer ---------- */
+
+.app-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  padding-top: 0.5em;
+  border-top: 1px solid var(--border);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.kofi-link {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  padding: 0.3em 0.6em;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  transition: all 0.2s;
+  margin-top: 0.75em;
+}
+
+.kofi-link:hover {
+  background: rgba(201, 168, 76, 0.1);
+  box-shadow: 0 0 8px rgba(201, 168, 76, 0.15);
+}
+
+.app-footer .kofi-link {
+  margin-top: 0;
+}
