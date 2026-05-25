@@ -295,7 +295,7 @@ body::before {
   box-shadow: 0 0 8px rgba(201, 168, 76, 0.1);
 }
 
-/* ---------- Alerts (inside left column) ---------- */
+/* ---------- Alerts (inside right column, below verdict) ---------- */
 
 .alerts-area {
   display: flex;
@@ -303,6 +303,15 @@ body::before {
   gap: 0.35em;
   height: 10em;
   overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  padding: 0.5em;
+}
+
+.alerts-area:empty {
+  border-color: transparent;
+  background: transparent;
 }
 
 .alert {
@@ -538,17 +547,16 @@ body::before {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 5px;
-  padding: 0.7em;
-  flex: 1;
+  padding: 0.5em;
 }
 
 .flow-step {
   display: flex;
   align-items: flex-start;
-  gap: 0.55em;
-  margin-bottom: 0.4em;
+  gap: 0.4em;
+  margin-bottom: 0.25em;
   font-size: 0.9rem;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .flow-step:last-child { margin-bottom: 0; }
@@ -579,7 +587,7 @@ body::before {
 
 .flow-connector {
   width: 2px;
-  height: 0.4em;
+  height: 0.2em;
   background: var(--border);
   margin-left: 0.7em;
 }
