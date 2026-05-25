@@ -2,50 +2,45 @@
    STS2 Deck Advisor — Stylesheet
 
    Units strategy:
-     %    — root font-size (multiplies user's browser preference, not replaces)
-     rem  — layout spacing (margins, gaps, padding between sections)
+     rem  — font sizes + layout spacing (relative to browser default, ~16px)
      em   — component-internal spacing (scales with local font-size)
      px   — borders, hairlines, box-shadows, border-radius (visual, not spatial)
+
+   Accessibility:
+     No root font-size override — respects user browser settings.
+     Smallest text: 0.75rem (12px). Body text: 0.875rem+ (14px+).
    ========================================================================== */
 
 /* ---------- Design Tokens ---------- */
 
 :root {
-  /* Surfaces */
   --bg: #0d0d12;
   --surface: #14141c;
   --surface-raised: #1c1c28;
   --border: #2a2a3a;
 
-  /* Offense palette */
   --offense: #e74c3c;
   --offense-glow: #e74c3c55;
   --st: #e74c3c;
   --aoe: #ff6b6b;
 
-  /* Defense palette */
   --defense: #3498db;
   --defense-glow: #3498db55;
   --block: #3498db;
   --mitigation: #5dade2;
 
-  /* Velocity palette */
   --velocity: #f39c12;
   --velocity-glow: #f39c1255;
 
-  /* Dead / Curse / Quest */
   --dead: #6b5b7b;
   --dead-glow: #6b5b7b44;
 
-  /* Skip */
   --skip: #8e44ad;
   --skip-glow: #8e44ad55;
 
-  /* Purge */
   --purge: #9b59b6;
   --purge-glow: #9b59b644;
 
-  /* Typography & misc */
   --text: #e8e6e3;
   --text-dim: #7a7a8a;
   --accent: #c9a84c;
@@ -62,10 +57,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-html {
-  font-size: 137.5%;
 }
 
 /* ---------- Base ---------- */
@@ -109,7 +100,7 @@ body::before {
 .header h1 {
   font-family: "Cinzel", serif;
   font-weight: 900;
-  font-size: 1.2rem;
+  font-size: 1.7rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--accent);
@@ -118,7 +109,7 @@ body::before {
 }
 
 .header__sub {
-  font-size: 0.55rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   letter-spacing: 0.2em;
   text-transform: uppercase;
@@ -140,7 +131,7 @@ body::before {
   color: var(--text-dim);
   font-family: "Cinzel", serif;
   font-weight: 700;
-  font-size: 0.7rem;
+  font-size: 1.05rem;
   cursor: pointer;
   transition: all 0.2s;
   letter-spacing: 0.1em;
@@ -172,7 +163,7 @@ body::before {
   gap: 0.4em;
   padding: 0.4em 0.7em;
   border-radius: 4px;
-  font-size: 0.58rem;
+  font-size: 0.875rem;
   line-height: 1.3;
 }
 
@@ -195,7 +186,7 @@ body::before {
 }
 
 .alert__icon {
-  font-size: 0.75rem;
+  font-size: 1.1rem;
   flex-shrink: 0;
 }
 
@@ -220,7 +211,7 @@ body::before {
 
 .col__label {
   font-family: "Cinzel", serif;
-  font-size: 0.6rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.18em;
@@ -239,7 +230,7 @@ body::before {
 }
 
 .grid-header {
-  font-size: 0.5rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   text-align: center;
@@ -282,7 +273,7 @@ body::before {
 }
 
 .input-card__label {
-  font-size: 0.5rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: 0.3em;
@@ -297,7 +288,7 @@ body::before {
 
 .input-card__hint {
   display: block;
-  font-size: 0.4rem;
+  font-size: 0.75rem;
   color: var(--text-dim);
   letter-spacing: 0.05em;
   margin-top: 0.1em;
@@ -320,7 +311,7 @@ body::before {
   border: 1px solid var(--border);
   background: var(--surface-raised);
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: 1.2rem;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -332,7 +323,7 @@ body::before {
 .stepper__btn:hover { background: var(--border); }
 
 .stepper__count {
-  font-size: 1.15rem;
+  font-size: 1.6rem;
   font-weight: 700;
   min-width: 1.5em;
   text-align: center;
@@ -368,7 +359,7 @@ body::before {
   align-items: flex-start;
   gap: 0.55em;
   margin-bottom: 0.4em;
-  font-size: 0.62rem;
+  font-size: 0.9rem;
   line-height: 1.4;
 }
 
@@ -382,7 +373,7 @@ body::before {
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.5rem;
+  font-size: 0.8rem;
   flex-shrink: 0;
   border: 2px solid var(--border);
   background: var(--surface-raised);
@@ -426,12 +417,12 @@ body::before {
 .verdict--skip          { border-color: var(--skip);     box-shadow: 0 0 14px var(--skip-glow); }
 .verdict--balanced      { border-color: var(--green);    box-shadow: 0 0 14px var(--green-glow); }
 
-.verdict__icon { font-size: 1.3rem; margin-bottom: 0.2em; }
+.verdict__icon { font-size: 1.8rem; margin-bottom: 0.2em; }
 
 .verdict__title {
   font-family: "Cinzel", serif;
   font-weight: 900;
-  font-size: 0.9rem;
+  font-size: 1.3rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-bottom: 0.2em;
@@ -444,7 +435,7 @@ body::before {
 .verdict--balanced .verdict__title      { color: var(--green); }
 
 .verdict__reason {
-  font-size: 0.6rem;
+  font-size: 0.875rem;
   color: var(--text-dim);
   line-height: 1.5;
   max-width: 25em;
@@ -462,7 +453,7 @@ body::before {
 
 .breakdown__header {
   font-family: "Cinzel", serif;
-  font-size: 0.55rem;
+  font-size: 0.85rem;
   color: var(--accent);
   letter-spacing: 0.15em;
   text-transform: uppercase;
@@ -474,7 +465,7 @@ body::before {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.4em;
-  font-size: 0.6rem;
+  font-size: 0.875rem;
   flex-wrap: wrap;
   gap: 0.25em;
 }
@@ -483,7 +474,7 @@ body::before {
 .deck-row__dim   { color: var(--text-dim); }
 .deck-row__dead  { color: var(--dead); font-weight: 600; }
 
-/* Ratio bar — thin visual element, px height is intentional */
+/* Ratio bar */
 .ratio-bar {
   display: flex;
   height: 0.45em;
@@ -502,7 +493,7 @@ body::before {
 .ratio-labels {
   display: flex;
   justify-content: space-between;
-  font-size: 0.5rem;
+  font-size: 0.8rem;
   color: var(--text-dim);
   margin-bottom: 0.5em;
 }
@@ -526,19 +517,19 @@ body::before {
   border-radius: 4px;
   padding: 0.35em;
   text-align: center;
-  font-size: 0.5rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .target-cell__label { color: var(--text-dim); margin-bottom: 0.15em; }
-.target-cell__nums  { font-size: 0.65rem; }
+.target-cell__nums  { font-size: 1rem; }
 .target-cell__actual { font-weight: 700; }
 .target-cell__actual--offense  { color: var(--offense); }
 .target-cell__actual--defense  { color: var(--defense); }
 .target-cell__actual--velocity { color: var(--velocity); }
 
-.target-cell__diff { font-size: 0.55rem; font-weight: 700; margin-top: 0.1em; }
+.target-cell__diff { font-size: 0.85rem; font-weight: 700; margin-top: 0.1em; }
 .target-cell__diff--need { color: var(--green); }
 .target-cell__diff--over { color: var(--offense); }
 .target-cell__diff--ok   { color: var(--text-dim); }
@@ -555,7 +546,7 @@ body::before {
   background: var(--surface-raised);
   border-left: 2px solid var(--border);
   border-radius: 0 4px 4px 0;
-  font-size: 0.58rem;
+  font-size: 0.875rem;
 }
 
 .priority-list li .priority-rank {
@@ -570,7 +561,7 @@ body::before {
 .priority-list__item--skip     { border-left-color: var(--skip); }
 
 .priority-tag {
-  font-size: 0.45rem;
+  font-size: 0.75rem;
   padding: 0.1em 0.3em;
   border-radius: 2px;
   text-transform: uppercase;
@@ -586,7 +577,7 @@ body::before {
 /* Tips */
 .tips {
   margin-top: 0.5em;
-  font-size: 0.55rem;
+  font-size: 0.85rem;
   color: var(--text-dim);
   line-height: 1.55;
   padding-top: 0.4em;
