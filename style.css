@@ -301,17 +301,12 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 0.25em;
-  max-height: 8em;
+  height: 9em;
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 5px;
   padding: 0.4em;
-}
-
-.alerts-area:empty {
-  border-color: transparent;
-  background: transparent;
 }
 
 .alert {
