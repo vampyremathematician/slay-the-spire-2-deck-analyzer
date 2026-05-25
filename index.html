@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STS2 Deck Advisor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <h1>Deck Advisor</h1>
+      <span class="header__sub">Slay the Spire 2</span>
+    </header>
+
+    <!-- Act Selector -->
+    <nav class="act-bar" id="act-bar">
+      <button class="act-btn active" data-act="1">Act I</button>
+      <button class="act-btn" data-act="2">Act II</button>
+      <button class="act-btn" data-act="3">Act III</button>
+    </nav>
+
+    <!-- Two-Column Layout -->
+    <div class="main-cols">
+
+      <!-- Left: Deck Composition -->
+      <section class="col">
+        <h2 class="col__label">Deck Composition</h2>
+
+        <div class="input-grid">
+          <div class="grid-header grid-header--offense">Offense</div>
+          <div class="grid-header grid-header--defense">Defense</div>
+          <div class="grid-header grid-header--velocity">Velocity</div>
+
+          <!-- Row 2: Single Target, Block, Velocity (spans 2 rows) -->
+          <div class="grid-cell grid-cell--st">
+            <div class="input-card input-card--st">
+              <div class="input-card__label">
+                Single Target
+                <span class="input-card__hint">Focused dmg</span>
+              </div>
+              <div class="stepper">
+                <button class="stepper__btn" data-key="st" data-delta="-1">−</button>
+                <span class="stepper__count" id="st-count">5</span>
+                <button class="stepper__btn" data-key="st" data-delta="1">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-cell grid-cell--blk">
+            <div class="input-card input-card--blk">
+              <div class="input-card__label">
+                Block
+                <span class="input-card__hint">HP prevention</span>
+              </div>
+              <div class="stepper">
+                <button class="stepper__btn" data-key="blk" data-delta="-1">−</button>
+                <span class="stepper__count" id="blk-count">5</span>
+                <button class="stepper__btn" data-key="blk" data-delta="1">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-cell grid-cell--vel">
+            <div class="input-card input-card--vel">
+              <div class="input-card__label">
+                Velocity
+                <span class="input-card__hint">Draw / Energy / Powers / Resource</span>
+              </div>
+              <div class="stepper">
+                <button class="stepper__btn" data-key="vel" data-delta="-1">−</button>
+                <span class="stepper__count" id="vel-count">0</span>
+                <button class="stepper__btn" data-key="vel" data-delta="1">+</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: AoE, Mitigation -->
+          <div class="grid-cell grid-cell--aoe">
+            <div class="input-card input-card--aoe">
+              <div class="input-card__label">
+                AoE
+                <span class="input-card__hint">Multi-target</span>
+              </div>
+              <div class="stepper">
+                <button class="stepper__btn" data-key="aoe" data-delta="-1">−</button>
+                <span class="stepper__count" id="aoe-count">0</span>
+                <button class="stepper__btn" data-key="aoe" data-delta="1">+</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-cell grid-cell--mit">
+            <div class="input-card input-card--mit">
+              <div class="input-card__label">
+                Mitigation
+                <span class="input-card__hint">Weak / Disarm</span>
+              </div>
+              <div class="stepper">
+                <button class="stepper__btn" data-key="mit" data-delta="-1">−</button>
+                <span class="stepper__count" id="mit-count">0</span>
+                <button class="stepper__btn" data-key="mit" data-delta="1">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dead Cards -->
+        <div class="dead-row">
+          <div class="input-card input-card--dead">
+            <div class="input-card__label">
+              Curses
+              <span class="input-card__hint">Unplayable</span>
+            </div>
+            <div class="stepper">
+              <button class="stepper__btn" data-key="curse" data-delta="-1">−</button>
+              <span class="stepper__count" id="curse-count">0</span>
+              <button class="stepper__btn" data-key="curse" data-delta="1">+</button>
+            </div>
+          </div>
+          <div class="input-card input-card--dead">
+            <div class="input-card__label">
+              Quests
+              <span class="input-card__hint">Status / Conditional</span>
+            </div>
+            <div class="stepper">
+              <button class="stepper__btn" data-key="quest" data-delta="-1">−</button>
+              <span class="stepper__count" id="quest-count">0</span>
+              <button class="stepper__btn" data-key="quest" data-delta="1">+</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right: Decision -->
+      <section class="col">
+        <h2 class="col__label">Decision</h2>
+        <div class="flowchart" id="flowchart"></div>
+        <div class="verdict" id="verdict">
+          <div class="verdict__icon" id="verdict-icon">⚔️</div>
+          <div class="verdict__title" id="verdict-title">Pick Offense</div>
+          <div class="verdict__reason" id="verdict-reason"></div>
+        </div>
+        <div class="purge-reminder hidden" id="purge-reminder">
+          <span class="purge-reminder__icon">🔥</span>
+          <span id="purge-text">Purge dead cards at the next shop.</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- Bottom: Full-Width Breakdown -->
+    <section class="breakdown">
+      <h3 class="breakdown__header">Breakdown</h3>
+
+      <div class="deck-row">
+        <span>Total: <span class="deck-row__value" id="deck-total">10</span></span>
+        <span>Functional: <span class="deck-row__value" id="deck-func">10</span></span>
+        <span class="deck-row__dim" id="deck-target">Target: 12–18</span>
+        <span class="deck-row__dead" id="deck-dead"></span>
+      </div>
+
+      <div class="ratio-bar">
+        <div class="ratio-bar__seg ratio-bar__seg--offense" id="bar-offense"></div>
+        <div class="ratio-bar__seg ratio-bar__seg--defense" id="bar-defense"></div>
+        <div class="ratio-bar__seg ratio-bar__seg--velocity" id="bar-velocity"></div>
+        <div class="ratio-bar__seg ratio-bar__seg--dead" id="bar-dead"></div>
+      </div>
+      <div class="ratio-labels">
+        <span class="ratio-labels__off">Off <span id="pct-offense">50%</span></span>
+        <span class="ratio-labels__def">Def <span id="pct-defense">50%</span></span>
+        <span class="ratio-labels__vel">Vel <span id="pct-velocity">0%</span></span>
+        <span class="ratio-labels__dead">Dead <span id="pct-dead">0%</span></span>
+      </div>
+
+      <div class="target-row">
+        <div class="target-cell">
+          <div class="target-cell__label">Offense</div>
+          <div class="target-cell__nums">
+            <span class="target-cell__actual target-cell__actual--offense" id="target-actual-off">5</span>
+            / <span id="target-ideal-off">6</span>
+          </div>
+          <div class="target-cell__diff" id="target-diff-off"></div>
+        </div>
+        <div class="target-cell">
+          <div class="target-cell__label">Defense</div>
+          <div class="target-cell__nums">
+            <span class="target-cell__actual target-cell__actual--defense" id="target-actual-def">5</span>
+            / <span id="target-ideal-def">5</span>
+          </div>
+          <div class="target-cell__diff" id="target-diff-def"></div>
+        </div>
+        <div class="target-cell">
+          <div class="target-cell__label">Velocity</div>
+          <div class="target-cell__nums">
+            <span class="target-cell__actual target-cell__actual--velocity" id="target-actual-vel">0</span>
+            / <span id="target-ideal-vel">2</span>
+          </div>
+          <div class="target-cell__diff" id="target-diff-vel"></div>
+        </div>
+      </div>
+
+      <div class="sub-warnings" id="sub-warnings"></div>
+
+      <h3 class="breakdown__header" style="margin-top: 2px;">Pick Priority</h3>
+      <ul class="priority-list" id="priority-list"></ul>
+
+      <div class="tips" id="tips"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
