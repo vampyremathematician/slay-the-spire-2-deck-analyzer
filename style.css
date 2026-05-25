@@ -541,6 +541,16 @@ body::before {
   font-size: 1.2rem !important;
 }
 
+.basic-card__count--mod {
+  color: var(--green) !important;
+}
+
+.basics-tracker__label--mod {
+  margin-top: 0.4em;
+  border-top: 1px solid var(--border);
+  padding-top: 0.4em;
+}
+
 /* ---------- Flowchart ---------- */
 
 .flowchart {

@@ -56,6 +56,8 @@ const counts = {
   quest:    0,
   basicSt:  0,
   basicBlk: 0,
+  modSt:    0,
+  modBlk:   0,
 };
 
 // ---------------------------------------------------------------------------
@@ -154,6 +156,8 @@ function startRun(charKey) {
   counts.quest    = 0;
   counts.basicSt  = char.st;
   counts.basicBlk = char.blk;
+  counts.modSt    = 0;
+  counts.modBlk   = 0;
 
   // Reset act
   currentAct = 1;
@@ -192,9 +196,11 @@ document.addEventListener("click", (e) => {
   const delta = Number(btn.dataset.delta);
   counts[key] = Math.max(0, counts[key] + delta);
 
-  // Cap basics at their starting maximum
+  // Cap basics and mods at their starting maximum
   if (key === "basicSt")  counts.basicSt  = Math.min(counts.basicSt,  basicMax.st);
   if (key === "basicBlk") counts.basicBlk = Math.min(counts.basicBlk, basicMax.blk);
+  if (key === "modSt")    counts.modSt    = Math.min(counts.modSt,    basicMax.st);
+  if (key === "modBlk")   counts.modBlk   = Math.min(counts.modBlk,   basicMax.blk);
 
   update();
 });
@@ -394,13 +400,13 @@ function buildAlerts(cfg, offense, defense, dead, total) {
     });
   }
 
-  // Basics remaining
+  // Basics remaining (unmodified only)
   const basicsLeft = counts.basicSt + counts.basicBlk;
   if (basicsLeft > 0) {
     alerts.push({
       level: "warn",
       icon:  "🗑️",
-      text:  `${basicsLeft} basic card${basicsLeft > 1 ? "s" : ""} remaining (${counts.basicSt}S / ${counts.basicBlk}D) — remove when possible.`,
+      text:  `${basicsLeft} unmodified basic${basicsLeft > 1 ? "s" : ""} (${counts.basicSt}S / ${counts.basicBlk}D)`,
     });
   }
 
