@@ -23,8 +23,19 @@
       <button class="act-btn" data-act="3">Act III</button>
     </nav>
 
-    <!-- Alerts Bar (full width, always visible) -->
-    <div class="alerts" id="alerts"></div>
+    <!-- Alerts + Verdict Row (two columns, fixed height) -->
+    <div class="top-row">
+      <div class="alerts-col">
+        <div class="alerts" id="alerts"></div>
+      </div>
+      <div class="verdict-col">
+        <div class="verdict" id="verdict">
+          <div class="verdict__icon" id="verdict-icon">⚔️</div>
+          <div class="verdict__title" id="verdict-title">Pick Offense</div>
+          <div class="verdict__reason" id="verdict-reason"></div>
+        </div>
+      </div>
+    </div>
 
     <!-- Two-Column Layout -->
     <div class="main-cols">
@@ -138,11 +149,6 @@
 
       <!-- Right: Decision -->
       <section class="col">
-        <div class="verdict" id="verdict">
-          <div class="verdict__icon" id="verdict-icon">⚔️</div>
-          <div class="verdict__title" id="verdict-title">Pick Offense</div>
-          <div class="verdict__reason" id="verdict-reason"></div>
-        </div>
         <h2 class="col__label">Decision</h2>
         <div class="flowchart" id="flowchart"></div>
       </section>
