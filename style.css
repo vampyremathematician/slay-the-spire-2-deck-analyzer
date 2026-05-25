@@ -300,13 +300,13 @@ body::before {
 .alerts-area {
   display: flex;
   flex-direction: column;
-  gap: 0.35em;
-  height: 10em;
+  gap: 0.25em;
+  max-height: 7em;
   overflow-y: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 5px;
-  padding: 0.5em;
+  padding: 0.4em;
 }
 
 .alerts-area:empty {
@@ -318,9 +318,9 @@ body::before {
   display: flex;
   align-items: center;
   gap: 0.4em;
-  padding: 0.4em 0.7em;
+  padding: 0.3em 0.5em;
   border-radius: 4px;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   line-height: 1.3;
 }
 
@@ -343,7 +343,7 @@ body::before {
 }
 
 .alert__icon {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   flex-shrink: 0;
 }
 
@@ -423,10 +423,49 @@ body::before {
 
 .input-card--vel {
   border-color: var(--velocity);
+  height: 100%;
+  padding: 0.3em;
+}
+
+/* Velocity 2x2 sub-grid */
+.vel-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25em;
+  height: 100%;
+}
+
+.vel-mini {
+  background: var(--surface-raised);
+  border-radius: 4px;
+  padding: 0.3em 0.2em;
+  text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  height: 100%;
+  gap: 0.15em;
+}
+
+.vel-mini__label {
+  font-size: 0.65rem;
+  color: var(--velocity);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Mini stepper (used for velocity + basics) */
+.stepper--mini { gap: 0.2em; }
+
+.stepper__btn--mini {
+  width: 1.4em !important;
+  height: 1.4em !important;
+  font-size: 0.85rem !important;
+}
+
+.stepper__count--mini {
+  font-size: 1rem !important;
+  min-width: 1.2em !important;
+  color: var(--velocity);
 }
 
 .input-card__label {
@@ -606,8 +645,7 @@ body::before {
 
 .verdict {
   border-radius: 7px;
-  padding: 0.75em;
-  height: 10em;
+  padding: 0.5em 0.75em;
   text-align: center;
   border: 2px solid var(--border);
   background: var(--surface);
@@ -623,15 +661,15 @@ body::before {
 .verdict--skip          { border-color: var(--skip);     box-shadow: 0 0 14px var(--skip-glow); }
 .verdict--balanced      { border-color: var(--green);    box-shadow: 0 0 14px var(--green-glow); }
 
-.verdict__icon { font-size: 1.8rem; margin-bottom: 0.2em; }
+.verdict__icon { font-size: 1.3rem; margin-bottom: 0.1em; }
 
 .verdict__title {
   font-family: "Cinzel", serif;
   font-weight: 900;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  margin-bottom: 0.2em;
+  margin-bottom: 0.1em;
 }
 
 .verdict--pick-offense  .verdict__title { color: var(--offense); }

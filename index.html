@@ -39,17 +39,16 @@
         <button class="char-btn char-btn--necrobinder" data-char="necrobinder">
           <span class="char-btn__icon">💀</span>
           <span class="char-btn__name">Necrobinder</span>
-          <span class="char-btn__info">4S / 4D / Unleash, +1</span>
+          <span class="char-btn__info">4S / 4D / Unleash, Bodyguard</span>
         </button>
       </div>
-      <p class="splash__note">Strikes → Single Target &nbsp;·&nbsp; Defends → Block<br>Categorize unique starters yourself.</p>
+      <p class="splash__note">Strikes → Single Target · Defends → Block<br>Unique starters auto-categorized. Adjust if your build differs.</p>
     </div>
   </div>
 
-  <!-- Main App (hidden until character selected) -->
+  <!-- Main App -->
   <div class="app hidden" id="app">
 
-    <!-- Header + New Run -->
     <header class="header">
       <div class="header__top">
         <button class="new-run-btn" id="new-run-btn">← New Run</button>
@@ -59,14 +58,12 @@
       <span class="header__sub">Slay the Spire 2</span>
     </header>
 
-    <!-- Act Selector -->
     <nav class="act-bar" id="act-bar">
       <button class="act-btn active" data-act="1">Act I</button>
       <button class="act-btn" data-act="2">Act II</button>
       <button class="act-btn" data-act="3">Act III</button>
     </nav>
 
-    <!-- Two-Column Layout -->
     <div class="main-cols">
 
       <!-- Left Column -->
@@ -80,13 +77,10 @@
 
           <div class="grid-cell grid-cell--st">
             <div class="input-card input-card--st">
-              <div class="input-card__label">
-                Single Target
-                <span class="input-card__hint">Focused dmg</span>
-              </div>
+              <div class="input-card__label">Single Target<span class="input-card__hint">Focused dmg</span></div>
               <div class="stepper">
                 <button class="stepper__btn" data-key="st" data-delta="-1">−</button>
-                <span class="stepper__count" id="st-count">5</span>
+                <span class="stepper__count" id="st-count">0</span>
                 <button class="stepper__btn" data-key="st" data-delta="1">+</button>
               </div>
             </div>
@@ -94,38 +88,56 @@
 
           <div class="grid-cell grid-cell--blk">
             <div class="input-card input-card--blk">
-              <div class="input-card__label">
-                Block
-                <span class="input-card__hint">HP prevention</span>
-              </div>
+              <div class="input-card__label">Block<span class="input-card__hint">HP prevention</span></div>
               <div class="stepper">
                 <button class="stepper__btn" data-key="blk" data-delta="-1">−</button>
-                <span class="stepper__count" id="blk-count">5</span>
+                <span class="stepper__count" id="blk-count">0</span>
                 <button class="stepper__btn" data-key="blk" data-delta="1">+</button>
               </div>
             </div>
           </div>
 
+          <!-- Velocity 2x2 mini-grid -->
           <div class="grid-cell grid-cell--vel">
-            <div class="input-card input-card--vel">
-              <div class="input-card__label">
-                Velocity
-                <span class="input-card__hint">Draw / Energy / Powers / Resource</span>
+            <div class="vel-grid">
+              <div class="vel-mini">
+                <div class="vel-mini__label">Draw</div>
+                <div class="stepper stepper--mini">
+                  <button class="stepper__btn stepper__btn--mini" data-key="velDraw" data-delta="-1">−</button>
+                  <span class="stepper__count stepper__count--mini" id="velDraw-count">0</span>
+                  <button class="stepper__btn stepper__btn--mini" data-key="velDraw" data-delta="1">+</button>
+                </div>
               </div>
-              <div class="stepper">
-                <button class="stepper__btn" data-key="vel" data-delta="-1">−</button>
-                <span class="stepper__count" id="vel-count">0</span>
-                <button class="stepper__btn" data-key="vel" data-delta="1">+</button>
+              <div class="vel-mini">
+                <div class="vel-mini__label">Energy</div>
+                <div class="stepper stepper--mini">
+                  <button class="stepper__btn stepper__btn--mini" data-key="velEnergy" data-delta="-1">−</button>
+                  <span class="stepper__count stepper__count--mini" id="velEnergy-count">0</span>
+                  <button class="stepper__btn stepper__btn--mini" data-key="velEnergy" data-delta="1">+</button>
+                </div>
+              </div>
+              <div class="vel-mini">
+                <div class="vel-mini__label">Powers</div>
+                <div class="stepper stepper--mini">
+                  <button class="stepper__btn stepper__btn--mini" data-key="velPowers" data-delta="-1">−</button>
+                  <span class="stepper__count stepper__count--mini" id="velPowers-count">0</span>
+                  <button class="stepper__btn stepper__btn--mini" data-key="velPowers" data-delta="1">+</button>
+                </div>
+              </div>
+              <div class="vel-mini">
+                <div class="vel-mini__label">Resource</div>
+                <div class="stepper stepper--mini">
+                  <button class="stepper__btn stepper__btn--mini" data-key="velResource" data-delta="-1">−</button>
+                  <span class="stepper__count stepper__count--mini" id="velResource-count">0</span>
+                  <button class="stepper__btn stepper__btn--mini" data-key="velResource" data-delta="1">+</button>
+                </div>
               </div>
             </div>
           </div>
 
           <div class="grid-cell grid-cell--aoe">
             <div class="input-card input-card--aoe">
-              <div class="input-card__label">
-                AoE
-                <span class="input-card__hint">Multi-target</span>
-              </div>
+              <div class="input-card__label">AoE<span class="input-card__hint">Multi-target</span></div>
               <div class="stepper">
                 <button class="stepper__btn" data-key="aoe" data-delta="-1">−</button>
                 <span class="stepper__count" id="aoe-count">0</span>
@@ -136,10 +148,7 @@
 
           <div class="grid-cell grid-cell--mit">
             <div class="input-card input-card--mit">
-              <div class="input-card__label">
-                Mitigation
-                <span class="input-card__hint">Weak / Disarm</span>
-              </div>
+              <div class="input-card__label">Mitigation<span class="input-card__hint">Weak / Disarm</span></div>
               <div class="stepper">
                 <button class="stepper__btn" data-key="mit" data-delta="-1">−</button>
                 <span class="stepper__count" id="mit-count">0</span>
@@ -152,10 +161,7 @@
         <!-- Dead Cards -->
         <div class="dead-row">
           <div class="input-card input-card--dead">
-            <div class="input-card__label">
-              Curses
-              <span class="input-card__hint">Unplayable</span>
-            </div>
+            <div class="input-card__label">Curses<span class="input-card__hint">Unplayable</span></div>
             <div class="stepper">
               <button class="stepper__btn" data-key="curse" data-delta="-1">−</button>
               <span class="stepper__count" id="curse-count">0</span>
@@ -163,10 +169,7 @@
             </div>
           </div>
           <div class="input-card input-card--dead">
-            <div class="input-card__label">
-              Quests
-              <span class="input-card__hint">Status / Conditional</span>
-            </div>
+            <div class="input-card__label">Quests<span class="input-card__hint">Status / Conditional</span></div>
             <div class="stepper">
               <button class="stepper__btn" data-key="quest" data-delta="-1">−</button>
               <span class="stepper__count" id="quest-count">0</span>
@@ -176,23 +179,23 @@
         </div>
 
         <!-- Basic Card Tracker -->
-        <div class="basics-tracker" id="basics-tracker">
+        <div class="basics-tracker">
           <div class="basics-tracker__label">Basics Remaining</div>
           <div class="basics-row">
             <div class="basic-card">
               <span class="basic-card__name">Strikes</span>
-              <div class="stepper">
-                <button class="stepper__btn" data-key="basicSt" data-delta="-1">−</button>
-                <span class="stepper__count basic-card__count" id="basicSt-count">5</span>
-                <button class="stepper__btn" data-key="basicSt" data-delta="1">+</button>
+              <div class="stepper stepper--mini">
+                <button class="stepper__btn stepper__btn--mini" data-key="basicSt" data-delta="-1">−</button>
+                <span class="stepper__count stepper__count--mini basic-card__count" id="basicSt-count">0</span>
+                <button class="stepper__btn stepper__btn--mini" data-key="basicSt" data-delta="1">+</button>
               </div>
             </div>
             <div class="basic-card">
               <span class="basic-card__name">Defends</span>
-              <div class="stepper">
-                <button class="stepper__btn" data-key="basicBlk" data-delta="-1">−</button>
-                <span class="stepper__count basic-card__count" id="basicBlk-count">4</span>
-                <button class="stepper__btn" data-key="basicBlk" data-delta="1">+</button>
+              <div class="stepper stepper--mini">
+                <button class="stepper__btn stepper__btn--mini" data-key="basicBlk" data-delta="-1">−</button>
+                <span class="stepper__count stepper__count--mini basic-card__count" id="basicBlk-count">0</span>
+                <button class="stepper__btn stepper__btn--mini" data-key="basicBlk" data-delta="1">+</button>
               </div>
             </div>
           </div>
@@ -200,18 +203,18 @@
           <div class="basics-row">
             <div class="basic-card">
               <span class="basic-card__name">Strikes</span>
-              <div class="stepper">
-                <button class="stepper__btn" data-key="modSt" data-delta="-1">−</button>
-                <span class="stepper__count basic-card__count basic-card__count--mod" id="modSt-count">0</span>
-                <button class="stepper__btn" data-key="modSt" data-delta="1">+</button>
+              <div class="stepper stepper--mini">
+                <button class="stepper__btn stepper__btn--mini" data-key="modSt" data-delta="-1">−</button>
+                <span class="stepper__count stepper__count--mini basic-card__count basic-card__count--mod" id="modSt-count">0</span>
+                <button class="stepper__btn stepper__btn--mini" data-key="modSt" data-delta="1">+</button>
               </div>
             </div>
             <div class="basic-card">
               <span class="basic-card__name">Defends</span>
-              <div class="stepper">
-                <button class="stepper__btn" data-key="modBlk" data-delta="-1">−</button>
-                <span class="stepper__count basic-card__count basic-card__count--mod" id="modBlk-count">0</span>
-                <button class="stepper__btn" data-key="modBlk" data-delta="1">+</button>
+              <div class="stepper stepper--mini">
+                <button class="stepper__btn stepper__btn--mini" data-key="modBlk" data-delta="-1">−</button>
+                <span class="stepper__count stepper__count--mini basic-card__count basic-card__count--mod" id="modBlk-count">0</span>
+                <button class="stepper__btn stepper__btn--mini" data-key="modBlk" data-delta="1">+</button>
               </div>
             </div>
           </div>
@@ -220,6 +223,7 @@
 
       <!-- Right Column -->
       <section class="col">
+        <h2 class="col__label">Evaluation</h2>
         <div class="verdict" id="verdict">
           <div class="verdict__icon" id="verdict-icon">⚔️</div>
           <div class="verdict__title" id="verdict-title">Pick Offense</div>
@@ -231,17 +235,15 @@
       </section>
     </div>
 
-    <!-- Bottom: Full-Width Breakdown -->
+    <!-- Breakdown -->
     <section class="breakdown">
       <h3 class="breakdown__header">Breakdown</h3>
-
       <div class="deck-row">
-        <span>Total: <span class="deck-row__value" id="deck-total">10</span></span>
-        <span>Functional: <span class="deck-row__value" id="deck-func">10</span></span>
+        <span>Total: <span class="deck-row__value" id="deck-total">0</span></span>
+        <span>Functional: <span class="deck-row__value" id="deck-func">0</span></span>
         <span class="deck-row__dim" id="deck-target">Target: 12–18</span>
         <span class="deck-row__dead" id="deck-dead"></span>
       </div>
-
       <div class="ratio-bar">
         <div class="ratio-bar__seg ratio-bar__seg--offense" id="bar-offense"></div>
         <div class="ratio-bar__seg ratio-bar__seg--defense" id="bar-defense"></div>
@@ -249,42 +251,30 @@
         <div class="ratio-bar__seg ratio-bar__seg--dead" id="bar-dead"></div>
       </div>
       <div class="ratio-labels">
-        <span class="ratio-labels__off">Off <span id="pct-offense">50%</span></span>
-        <span class="ratio-labels__def">Def <span id="pct-defense">50%</span></span>
+        <span class="ratio-labels__off">Off <span id="pct-offense">0%</span></span>
+        <span class="ratio-labels__def">Def <span id="pct-defense">0%</span></span>
         <span class="ratio-labels__vel">Vel <span id="pct-velocity">0%</span></span>
         <span class="ratio-labels__dead">Dead <span id="pct-dead">0%</span></span>
       </div>
-
       <div class="target-row">
         <div class="target-cell">
           <div class="target-cell__label">Offense</div>
-          <div class="target-cell__nums">
-            <span class="target-cell__actual target-cell__actual--offense" id="target-actual-off">5</span>
-            / <span id="target-ideal-off">6</span>
-          </div>
+          <div class="target-cell__nums"><span class="target-cell__actual target-cell__actual--offense" id="target-actual-off">0</span> / <span id="target-ideal-off">0</span></div>
           <div class="target-cell__diff" id="target-diff-off"></div>
         </div>
         <div class="target-cell">
           <div class="target-cell__label">Defense</div>
-          <div class="target-cell__nums">
-            <span class="target-cell__actual target-cell__actual--defense" id="target-actual-def">5</span>
-            / <span id="target-ideal-def">5</span>
-          </div>
+          <div class="target-cell__nums"><span class="target-cell__actual target-cell__actual--defense" id="target-actual-def">0</span> / <span id="target-ideal-def">0</span></div>
           <div class="target-cell__diff" id="target-diff-def"></div>
         </div>
         <div class="target-cell">
           <div class="target-cell__label">Velocity</div>
-          <div class="target-cell__nums">
-            <span class="target-cell__actual target-cell__actual--velocity" id="target-actual-vel">0</span>
-            / <span id="target-ideal-vel">2</span>
-          </div>
+          <div class="target-cell__nums"><span class="target-cell__actual target-cell__actual--velocity" id="target-actual-vel">0</span> / <span id="target-ideal-vel">0</span></div>
           <div class="target-cell__diff" id="target-diff-vel"></div>
         </div>
       </div>
-
       <h3 class="breakdown__header">Pick Priority</h3>
       <ul class="priority-list" id="priority-list"></ul>
-
       <div class="tips" id="tips"></div>
     </section>
   </div>

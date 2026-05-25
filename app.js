@@ -5,36 +5,36 @@
 // ---------------------------------------------------------------------------
 // Character Starting Decks
 //
-//   Strikes → Single Target offense
-//   Defends → Block defense
-//   Unique starters are left for the player to categorize.
+//   basicSt/basicBlk — starter Strikes/Defends
+//   extra — unique starters, auto-categorized by card type:
+//           Attack → st, Skill → blk or velocity sub
 // ---------------------------------------------------------------------------
 
 const CHARACTERS = {
   ironclad: {
     name: "Ironclad",
-    st: 5, blk: 4,
-    starters: "Bash",
+    basicSt: 5, basicBlk: 4,
+    extra: { st: 1 },                    // Bash (Attack → ST)
   },
   silent: {
     name: "Silent",
-    st: 5, blk: 5,
-    starters: "Neutralize, Survivor",
+    basicSt: 5, basicBlk: 5,
+    extra: { st: 1, blk: 1 },            // Neutralize (Attack → ST), Survivor (Skill → Block)
   },
   defect: {
     name: "Defect",
-    st: 4, blk: 4,
-    starters: "Zap, Dualcast",
+    basicSt: 4, basicBlk: 4,
+    extra: { velResource: 2 },            // Zap + Dualcast (Skill → Resource)
   },
   regent: {
     name: "Regent",
-    st: 4, blk: 4,
-    starters: "Falling Star, Venerate",
+    basicSt: 4, basicBlk: 4,
+    extra: { st: 1, velResource: 1 },     // Falling Star (Attack → ST), Venerate (Skill → Resource)
   },
   necrobinder: {
     name: "Necrobinder",
-    st: 4, blk: 4,
-    starters: "Unleash, +1",
+    basicSt: 4, basicBlk: 4,
+    extra: { st: 1, blk: 1 },            // Unleash (Attack → ST), Bodyguard (Skill → Block)
   },
 };
 
@@ -44,20 +44,23 @@ const CHARACTERS = {
 
 let currentAct = 1;
 let currentChar = null;
-let basicMax = { st: 0, blk: 0 }; // starting values, set on character select
+let basicMax = { st: 0, blk: 0 };
 
 const counts = {
-  st:       0,
-  aoe:      0,
-  blk:      0,
-  mit:      0,
-  vel:      0,
-  curse:    0,
-  quest:    0,
-  basicSt:  0,
-  basicBlk: 0,
-  modSt:    0,
-  modBlk:   0,
+  st:          0,
+  aoe:         0,
+  blk:         0,
+  mit:         0,
+  velDraw:     0,
+  velEnergy:   0,
+  velPowers:   0,
+  velResource: 0,
+  curse:       0,
+  quest:       0,
+  basicSt:     0,
+  basicBlk:    0,
+  modSt:       0,
+  modBlk:      0,
 };
 
 // ---------------------------------------------------------------------------
@@ -66,40 +69,25 @@ const counts = {
 
 const ACT_CONFIG = {
   1: {
-    deckMin: 12,
-    deckMax: 18,
-    offensePct:  0.45,
-    defensePct:  0.35,
-    velocityPct: 0.20,
-    aoeFloor:      1,
-    aoeWarnPct:    0.15,
-    blockFloorPct: 0.55,
+    deckMin: 12, deckMax: 18,
+    offensePct: 0.45, defensePct: 0.35, velocityPct: 0.20,
+    aoeFloor: 1, aoeWarnPct: 0.15, blockFloorPct: 0.55,
     tip: `<strong>Act I:</strong> Front-loaded ST damage first.
           At least 1 AoE by mid-act. Block > mitigation early.
           Velocity only if offense + defense already work.`,
   },
   2: {
-    deckMin: 18,
-    deckMax: 25,
-    offensePct:  0.38,
-    defensePct:  0.38,
-    velocityPct: 0.24,
-    aoeFloor:      2,
-    aoeWarnPct:    0.25,
-    blockFloorPct: 0.50,
+    deckMin: 18, deckMax: 25,
+    offensePct: 0.38, defensePct: 0.38, velocityPct: 0.24,
+    aoeFloor: 2, aoeWarnPct: 0.25, blockFloorPct: 0.50,
     tip: `<strong>Act II:</strong> Multi-enemy fights get nasty — need real AoE.
           Balance block + mitigation. Add velocity to cycle.
           Skip if deck is functional.`,
   },
   3: {
-    deckMin: 20,
-    deckMax: 27,
-    offensePct:  0.35,
-    defensePct:  0.38,
-    velocityPct: 0.27,
-    aoeFloor:      2,
-    aoeWarnPct:    0.25,
-    blockFloorPct: 0.45,
+    deckMin: 20, deckMax: 27,
+    offensePct: 0.35, defensePct: 0.38, velocityPct: 0.27,
+    aoeFloor: 2, aoeWarnPct: 0.25, blockFloorPct: 0.45,
     tip: `<strong>Act III:</strong> Deck should be built. Velocity matters most.
           Only strict upgrades. Both block and mitigation online.
           Purge dead cards at every shop.`,
@@ -121,7 +109,7 @@ function setWidth(id, pct) {
 }
 
 // ---------------------------------------------------------------------------
-// Splash screen + New Run
+// Splash + New Run
 // ---------------------------------------------------------------------------
 
 document.getElementById("char-grid").addEventListener("click", (e) => {
@@ -141,23 +129,23 @@ function startRun(charKey) {
   if (!char) return;
 
   currentChar = charKey;
+  basicMax.st  = char.basicSt;
+  basicMax.blk = char.basicBlk;
 
-  // Set basic card maximums
-  basicMax.st  = char.st;
-  basicMax.blk = char.blk;
+  // Reset all counts
+  for (const key of Object.keys(counts)) counts[key] = 0;
 
-  // Reset counts to starting deck
-  counts.st       = char.st;
-  counts.aoe      = 0;
-  counts.blk      = char.blk;
-  counts.mit      = 0;
-  counts.vel      = 0;
-  counts.curse    = 0;
-  counts.quest    = 0;
-  counts.basicSt  = char.st;
-  counts.basicBlk = char.blk;
-  counts.modSt    = 0;
-  counts.modBlk   = 0;
+  // Set basics
+  counts.st       = char.basicSt + (char.extra.st || 0);
+  counts.blk      = char.basicBlk + (char.extra.blk || 0);
+  counts.basicSt  = char.basicSt;
+  counts.basicBlk = char.basicBlk;
+
+  // Set velocity extras
+  counts.velDraw     = char.extra.velDraw     || 0;
+  counts.velEnergy   = char.extra.velEnergy   || 0;
+  counts.velPowers   = char.extra.velPowers   || 0;
+  counts.velResource = char.extra.velResource || 0;
 
   // Reset act
   currentAct = 1;
@@ -165,13 +153,9 @@ function startRun(charKey) {
     b.classList.toggle("active", i === 0);
   });
 
-  // Show character name in header
   setText("header-char", char.name);
-
-  // Switch screens
   $("splash").classList.add("hidden");
   $("app").classList.remove("hidden");
-
   update();
 }
 
@@ -190,13 +174,15 @@ document.getElementById("act-bar").addEventListener("click", (e) => {
 });
 
 document.addEventListener("click", (e) => {
-  const btn = e.target.closest(".stepper__btn");
+  const btn = e.target.closest("[data-key][data-delta]");
   if (!btn) return;
   const key   = btn.dataset.key;
   const delta = Number(btn.dataset.delta);
+  if (!(key in counts)) return;
+
   counts[key] = Math.max(0, counts[key] + delta);
 
-  // Cap basics and mods at their starting maximum
+  // Cap basics and mods
   if (key === "basicSt")  counts.basicSt  = Math.min(counts.basicSt,  basicMax.st);
   if (key === "basicBlk") counts.basicBlk = Math.min(counts.basicBlk, basicMax.blk);
   if (key === "modSt")    counts.modSt    = Math.min(counts.modSt,    basicMax.st);
@@ -206,96 +192,87 @@ document.addEventListener("click", (e) => {
 });
 
 // ---------------------------------------------------------------------------
+// Velocity total helper
+// ---------------------------------------------------------------------------
+
+function velocityTotal() {
+  return counts.velDraw + counts.velEnergy + counts.velPowers + counts.velResource;
+}
+
+// ---------------------------------------------------------------------------
 // Main update
 // ---------------------------------------------------------------------------
 
 function update() {
   const cfg = ACT_CONFIG[currentAct];
 
-  // Derived totals
   const offense    = counts.st + counts.aoe;
   const defense    = counts.blk + counts.mit;
-  const functional = offense + defense + counts.vel;
+  const vel        = velocityTotal();
+  const functional = offense + defense + vel;
   const dead       = counts.curse + counts.quest;
   const total      = functional + dead;
 
   // Counter displays
   for (const key of Object.keys(counts)) {
-    setText(key + "-count", counts[key]);
+    const el = $(key + "-count");
+    if (el) el.textContent = counts[key];
   }
 
-  // Deck size meta
+  // Deck meta
   setText("deck-total", total);
   setText("deck-func", functional);
   setText("deck-target", `Target: ${cfg.deckMin}–${cfg.deckMax}`);
 
   const deadEl = $("deck-dead");
   if (dead > 0) {
-    const probClean = deadDrawProbability(functional, total);
-    deadEl.textContent = `${dead} dead (~${Math.round((1 - probClean) * 100)}% per hand)`;
+    const pClean = deadDrawProbability(functional, total);
+    deadEl.textContent = `${dead} dead (~${Math.round((1 - pClean) * 100)}% per hand)`;
   } else {
     deadEl.textContent = "";
   }
 
   // Ratio bar
-  const pctOff = total ? (offense / total) * 100 : 0;
-  const pctDef = total ? (defense / total) * 100 : 0;
-  const pctVel = total ? (counts.vel / total) * 100 : 0;
-  const pctDed = total ? (dead / total) * 100 : 0;
+  const pO = total ? (offense / total) * 100 : 0;
+  const pD = total ? (defense / total) * 100 : 0;
+  const pV = total ? (vel / total) * 100 : 0;
+  const pX = total ? (dead / total) * 100 : 0;
 
-  setWidth("bar-offense",  pctOff);
-  setWidth("bar-defense",  pctDef);
-  setWidth("bar-velocity", pctVel);
-  setWidth("bar-dead",     pctDed);
+  setWidth("bar-offense", pO); setWidth("bar-defense", pD);
+  setWidth("bar-velocity", pV); setWidth("bar-dead", pX);
+  setText("pct-offense", Math.round(pO) + "%"); setText("pct-defense", Math.round(pD) + "%");
+  setText("pct-velocity", Math.round(pV) + "%"); setText("pct-dead", dead ? Math.round(pX) + "%" : "0%");
 
-  setText("pct-offense",  Math.round(pctOff) + "%");
-  setText("pct-defense",  Math.round(pctDef) + "%");
-  setText("pct-velocity", Math.round(pctVel) + "%");
-  setText("pct-dead",     dead ? Math.round(pctDed) + "%" : "0%");
+  // Targets
+  const ref = Math.max(functional, Math.round((cfg.deckMin + cfg.deckMax) / 2));
+  const tO = Math.round(ref * cfg.offensePct);
+  const tD = Math.round(ref * cfg.defensePct);
+  const tV = Math.round(ref * cfg.velocityPct);
+  const dO = tO - offense, dD = tD - defense, dV = tV - vel;
 
-  // Ideal targets
-  const idealMid  = Math.round((cfg.deckMin + cfg.deckMax) / 2);
-  const reference = Math.max(functional, idealMid);
-
-  const targetOff = Math.round(reference * cfg.offensePct);
-  const targetDef = Math.round(reference * cfg.defensePct);
-  const targetVel = Math.round(reference * cfg.velocityPct);
-
-  const deltaOff = targetOff - offense;
-  const deltaDef = targetDef - defense;
-  const deltaVel = targetVel - counts.vel;
-
-  renderTargetCell("off", offense,    targetOff, deltaOff);
-  renderTargetCell("def", defense,    targetDef, deltaDef);
-  renderTargetCell("vel", counts.vel, targetVel, deltaVel);
+  renderTargetCell("off", offense, tO, dO);
+  renderTargetCell("def", defense, tD, dD);
+  renderTargetCell("vel", vel, tV, dV);
 
   // Alerts
   const alerts = buildAlerts(cfg, offense, defense, dead, total);
   renderAlerts(alerts);
 
-  // Needs sorted
+  // Needs
   const needs = [
-    { type: "off", label: "Offense",  delta: deltaOff, icon: "⚔️" },
-    { type: "def", label: "Defense",  delta: deltaDef, icon: "🛡️" },
-    { type: "vel", label: "Velocity", delta: deltaVel, icon: "⚡" },
+    { type: "off", label: "Offense",  delta: dO, icon: "⚔️" },
+    { type: "def", label: "Defense",  delta: dD, icon: "🛡️" },
+    { type: "vel", label: "Velocity", delta: dV, icon: "⚡" },
   ].sort((a, b) => b.delta - a.delta);
 
   const isOversize  = total > cfg.deckMax;
   const isUndersize = functional < cfg.deckMin;
-  const allMet      = deltaOff <= 0 && deltaDef <= 0 && deltaVel <= 0;
+  const allMet      = dO <= 0 && dD <= 0 && dV <= 0;
   const topNeed     = needs[0];
 
-  // Verdict
-  const verdict = resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense);
-  renderVerdict(verdict);
-
-  // Priority
+  renderVerdict(resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense));
   renderPriorityList(needs, allMet);
-
-  // Flowchart
   renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, alerts);
-
-  // Tips
   $("tips").innerHTML = cfg.tip;
 }
 
@@ -304,127 +281,69 @@ function update() {
 // ---------------------------------------------------------------------------
 
 function deadDrawProbability(functional, total) {
-  let pClean = 1;
-  for (let i = 0; i < 5; i++) {
-    pClean *= Math.max(0, functional - i) / Math.max(1, total - i);
-  }
-  return pClean;
+  let p = 1;
+  for (let i = 0; i < 5; i++) p *= Math.max(0, functional - i) / Math.max(1, total - i);
+  return p;
 }
 
 // ---------------------------------------------------------------------------
-// Target cell renderer
+// Target cell
 // ---------------------------------------------------------------------------
 
 function renderTargetCell(key, actual, target, delta) {
   setText("target-actual-" + key, actual);
   setText("target-ideal-" + key, target);
-
   const el = $("target-diff-" + key);
-  if (delta > 0) {
-    el.textContent = "need +" + delta;
-    el.className = "target-cell__diff target-cell__diff--need";
-  } else if (delta < 0) {
-    el.textContent = delta + " over";
-    el.className = "target-cell__diff target-cell__diff--over";
-  } else {
-    el.textContent = "✓";
-    el.className = "target-cell__diff target-cell__diff--ok";
-  }
+  if (delta > 0)      { el.textContent = "need +" + delta; el.className = "target-cell__diff target-cell__diff--need"; }
+  else if (delta < 0) { el.textContent = delta + " over";  el.className = "target-cell__diff target-cell__diff--over"; }
+  else                { el.textContent = "✓";               el.className = "target-cell__diff target-cell__diff--ok"; }
 }
 
 // ---------------------------------------------------------------------------
-// Alerts
+// Alerts (max 3)
 // ---------------------------------------------------------------------------
 
 function buildAlerts(cfg, offense, defense, dead, total) {
   const alerts = [];
+  const vel = velocityTotal();
 
   // AoE
-  if (offense > 0 && counts.aoe === 0) {
-    alerts.push({
-      level: currentAct >= 2 ? "critical" : "warn",
-      icon:  "⚔️",
-      text:  "No AoE — multi-enemy fights will stall.",
-    });
-  } else if (offense >= 3 && counts.aoe < cfg.aoeFloor) {
-    alerts.push({
-      level: "warn",
-      icon:  "⚔️",
-      text:  `Only ${counts.aoe} AoE in ${offense} offense. Target ${cfg.aoeFloor}+.`,
-    });
-  } else if (offense >= 4 && counts.aoe / offense < cfg.aoeWarnPct) {
-    alerts.push({
-      level: "warn",
-      icon:  "⚔️",
-      text:  `AoE at ${Math.round((counts.aoe / offense) * 100)}% — below ~${Math.round(cfg.aoeWarnPct * 100)}%.`,
-    });
-  }
+  if (offense > 0 && counts.aoe === 0)
+    alerts.push({ level: currentAct >= 2 ? "critical" : "warn", icon: "⚔️", text: "No AoE — multi-enemy fights will stall." });
+  else if (offense >= 3 && counts.aoe < cfg.aoeFloor)
+    alerts.push({ level: "warn", icon: "⚔️", text: `Only ${counts.aoe} AoE in ${offense} offense. Target ${cfg.aoeFloor}+.` });
 
   // Block
-  if (defense > 0 && counts.blk === 0) {
-    alerts.push({
-      level: "critical",
-      icon:  "🛡️",
-      text:  "No block — mitigation alone won't stop damage.",
-    });
-  } else if (defense >= 3 && counts.blk / defense < cfg.blockFloorPct) {
-    alerts.push({
-      level: "warn",
-      icon:  "🛡️",
-      text:  `Block is ${Math.round((counts.blk / defense) * 100)}% of defense — need >${Math.round(cfg.blockFloorPct * 100)}%.`,
-    });
-  }
+  if (defense > 0 && counts.blk === 0)
+    alerts.push({ level: "critical", icon: "🛡️", text: "No block — mitigation alone won't stop damage." });
+  else if (defense >= 3 && counts.blk / defense < cfg.blockFloorPct)
+    alerts.push({ level: "warn", icon: "🛡️", text: `Block ${Math.round((counts.blk / defense) * 100)}% — need >${Math.round(cfg.blockFloorPct * 100)}%.` });
 
   // Mitigation
-  if (defense > 0 && counts.mit === 0 && currentAct >= 2) {
-    alerts.push({
-      level: "warn",
-      icon:  "🛡️",
-      text:  "No mitigation — pure block gets overwhelmed late.",
-    });
-  }
+  if (defense > 0 && counts.mit === 0 && currentAct >= 2)
+    alerts.push({ level: "warn", icon: "🛡️", text: "No mitigation — pure block overwhelmed late." });
 
-  // Dead cards
+  // Dead
   if (dead > 0) {
-    const probClean = deadDrawProbability(
-      counts.st + counts.aoe + counts.blk + counts.mit + counts.vel,
-      total,
-    );
-    const pctHit = Math.round((1 - probClean) * 100);
-    alerts.push({
-      level: "purge",
-      icon:  "🔥",
-      text:  dead >= 2
-        ? `${dead} dead cards (~${pctHit}% per hand) — purge at shop ASAP.`
-        : `1 dead card (~${pctHit}% per hand) — purge at next shop.`,
+    const pct = Math.round((1 - deadDrawProbability(offense + defense + vel, total)) * 100);
+    alerts.push({ level: "purge", icon: "🔥",
+      text: dead >= 2 ? `${dead} dead cards (~${pct}% per hand) — purge ASAP.` : `1 dead card (~${pct}% per hand) — purge at shop.`
     });
   }
 
-  // Basics remaining (unmodified only)
+  // Basics remaining
   const basicsLeft = counts.basicSt + counts.basicBlk;
-  if (basicsLeft > 0) {
-    alerts.push({
-      level: "warn",
-      icon:  "🗑️",
-      text:  `${basicsLeft} unmodified basic${basicsLeft > 1 ? "s" : ""} (${counts.basicSt}S / ${counts.basicBlk}D)`,
-    });
-  }
+  if (basicsLeft > 0)
+    alerts.push({ level: "warn", icon: "🗑️", text: `${basicsLeft} unmodified basic${basicsLeft > 1 ? "s" : ""} (${counts.basicSt}S / ${counts.basicBlk}D)` });
 
   return alerts;
 }
 
 function renderAlerts(alerts) {
   const container = $("alerts");
-  if (alerts.length === 0) {
-    container.innerHTML = "";
-    return;
-  }
-
-  container.innerHTML = alerts.map((a) =>
-    `<div class="alert alert--${a.level}">
-       <span class="alert__icon">${a.icon}</span>
-       <span>${a.text}</span>
-     </div>`
+  if (!alerts.length) { container.innerHTML = ""; return; }
+  container.innerHTML = alerts.slice(0, 3).map((a) =>
+    `<div class="alert alert--${a.level}"><span class="alert__icon">${a.icon}</span><span>${a.text}</span></div>`
   ).join("");
 }
 
@@ -444,44 +363,26 @@ function subAdvice(type, cfg, offense, defense) {
     if (counts.mit === 0 && currentAct >= 2) return "Lean mitigation.";
     return "Block or mitigation.";
   }
-  return "Draw, energy, powers, resource gen.";
+  return "Draw, energy, powers, or resource gen.";
 }
 
 // ---------------------------------------------------------------------------
 // Verdict
 // ---------------------------------------------------------------------------
 
-function resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense) {
-  if (total === 0) {
-    return { cls: "pick-offense", icon: "⚔️", title: "Add Cards", reason: "Empty deck — start with damage." };
-  }
-  if (isOversize && allMet) {
-    return { cls: "skip", icon: "⏭️", title: "Skip", reason: `Over ${cfg.deckMax}, ratios met. Only swap if strictly better.` };
-  }
-  if (allMet && !isUndersize) {
-    return { cls: "balanced", icon: "✦", title: "Balanced — Skip", reason: "Ratios solid. Only pick a strict upgrade." };
-  }
-  if (isOversize) {
-    return { cls: "skip", icon: "⏭️", title: "Skip — Trim", reason: `Bloated at ${total}. Need ${topNeed.label.toLowerCase()} but remove weak cards first.` };
-  }
-  if (topNeed.delta <= 0) {
-    return { cls: "balanced", icon: "✦", title: "Lean Skip", reason: "Ratios healthy. Only strict upgrades." };
-  }
-
-  const typeMap = { off: "offense", def: "defense", vel: "velocity" };
-  return {
-    cls:    "pick-" + typeMap[topNeed.type],
-    icon:   topNeed.icon,
-    title:  "Pick " + topNeed.label,
-    reason: `Short ${topNeed.delta}. ${subAdvice(topNeed.type, cfg, offense, defense)}`,
-  };
+function resolveVerdict(cfg, total, over, under, allMet, top, offense, defense) {
+  if (total === 0) return { cls: "pick-offense", icon: "⚔️", title: "Add Cards", reason: "Empty deck — start with damage." };
+  if (over && allMet) return { cls: "skip", icon: "⏭️", title: "Skip", reason: `Over ${cfg.deckMax}, ratios met. Swap only if strictly better.` };
+  if (allMet && !under) return { cls: "balanced", icon: "✦", title: "Balanced — Skip", reason: "Ratios solid. Only pick a strict upgrade." };
+  if (over) return { cls: "skip", icon: "⏭️", title: "Skip — Trim", reason: `Bloated at ${total}. Need ${top.label.toLowerCase()} but remove first.` };
+  if (top.delta <= 0) return { cls: "balanced", icon: "✦", title: "Lean Skip", reason: "Ratios healthy. Only strict upgrades." };
+  const m = { off: "offense", def: "defense", vel: "velocity" };
+  return { cls: "pick-" + m[top.type], icon: top.icon, title: "Pick " + top.label, reason: `Short ${top.delta}. ${subAdvice(top.type, cfg, offense, defense)}` };
 }
 
 function renderVerdict(v) {
   $("verdict").className = `verdict verdict--${v.cls}`;
-  setText("verdict-icon",   v.icon);
-  setText("verdict-title",  v.title);
-  setText("verdict-reason", v.reason);
+  setText("verdict-icon", v.icon); setText("verdict-title", v.title); setText("verdict-reason", v.reason);
 }
 
 // ---------------------------------------------------------------------------
@@ -489,107 +390,45 @@ function renderVerdict(v) {
 // ---------------------------------------------------------------------------
 
 function renderPriorityList(needs, allMet) {
-  const list = $("priority-list");
-  list.innerHTML = "";
+  const list = $("priority-list"); list.innerHTML = "";
+  const cls = { off: "offense", def: "defense", vel: "velocity" };
 
-  const typeClasses = { off: "offense", def: "defense", vel: "velocity" };
-
-  needs.forEach((need, i) => {
+  needs.forEach((n, i) => {
     const li = document.createElement("li");
-    li.className = need.delta > 0 ? `priority-list__item--${typeClasses[need.type]}` : "";
-
-    const statusText = need.delta > 0
-      ? `Need +${need.delta}`
-      : need.delta < 0
-        ? `${need.delta} over`
-        : "✓ Met";
-
-    let subHint = "";
-    if (need.delta > 0) {
-      if (need.type === "off") subHint = counts.aoe === 0 ? " → AoE" : "";
-      if (need.type === "def") subHint = counts.blk === 0 ? " → Block" : (counts.mit === 0 && currentAct >= 2 ? " → Mit" : "");
+    li.className = n.delta > 0 ? `priority-list__item--${cls[n.type]}` : "";
+    const st = n.delta > 0 ? `Need +${n.delta}` : n.delta < 0 ? `${n.delta} over` : "✓ Met";
+    let sub = "";
+    if (n.delta > 0) {
+      if (n.type === "off") sub = counts.aoe === 0 ? " → AoE" : "";
+      if (n.type === "def") sub = counts.blk === 0 ? " → Block" : (counts.mit === 0 && currentAct >= 2 ? " → Mit" : "");
     }
-
-    li.innerHTML = `
-      <span class="priority-rank">${i + 1}</span>
-      <span class="priority-tag priority-tag--${typeClasses[need.type]}">${need.label}</span>
-      <span>${statusText}${subHint}</span>`;
+    li.innerHTML = `<span class="priority-rank">${i + 1}</span><span class="priority-tag priority-tag--${cls[n.type]}">${n.label}</span><span>${st}${sub}</span>`;
     list.appendChild(li);
   });
 
-  const skipLi = document.createElement("li");
-  skipLi.className = "priority-list__item--skip";
-  skipLi.innerHTML = `
-    <span class="priority-rank">${allMet ? "★" : "—"}</span>
-    <span class="priority-tag priority-tag--skip">Skip</span>
-    <span>${allMet ? "Needs met — skip unless upgrade" : "Only if all options bad"}</span>`;
-  list.appendChild(skipLi);
+  const sl = document.createElement("li"); sl.className = "priority-list__item--skip";
+  sl.innerHTML = `<span class="priority-rank">${allMet ? "★" : "—"}</span><span class="priority-tag priority-tag--skip">Skip</span><span>${allMet ? "Needs met — skip unless upgrade" : "Only if all options bad"}</span>`;
+  list.appendChild(sl);
 }
 
 // ---------------------------------------------------------------------------
 // Flowchart
 // ---------------------------------------------------------------------------
 
-function renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, alerts) {
-  const steps  = [];
-  const sizeOk = total >= cfg.deckMin && total <= cfg.deckMax;
+function renderFlowchart(cfg, total, over, under, allMet, top, alerts) {
+  const s = [], ok = total >= cfg.deckMin && total <= cfg.deckMax;
+  s.push({ q: `Deck ${total} — ${cfg.deckMin}–${cfg.deckMax}?`, a: over ? `Over by ${total - cfg.deckMax}.` : under ? `Under by ${cfg.deckMin - total}.` : "In range.", n: ok ? "yes" : "no", h: !ok });
+  s.push({ q: "Category ratios?", a: allMet ? "All met." : `Gap: ${top.label} +${Math.max(0, top.delta)}`, n: allMet ? "yes" : "no", h: !allMet });
+  const real = alerts.filter(a => a.level !== "purge" && a.level !== "warn" || !a.text.includes("unmodified"));
+  if (real.length) { const w = real.find(a => a.level === "critical") || real[0]; s.push({ q: "Sub-types?", a: w.text, n: w.level === "critical" ? "no" : "warn", h: true }); }
+  else s.push({ q: "Sub-types?", a: "ST/AoE + Block/Mit OK.", n: "yes", h: false });
+  if (over && allMet) s.push({ q: "Action?", a: "SKIP. Full and balanced.", n: "active", h: true });
+  else if (allMet && !under) s.push({ q: "Action?", a: "SKIP unless strict upgrade.", n: "active", h: true });
+  else if (over) s.push({ q: "Action?", a: `Exceptional ${top.label.toLowerCase()} only, then remove.`, n: "active", h: true });
+  else if (top.delta > 0) s.push({ q: "Action?", a: `PICK ${top.label.toUpperCase()}.`, n: "active", h: true });
+  else s.push({ q: "Action?", a: "SKIP unless upgrade.", n: "active", h: true });
 
-  steps.push({
-    question:  `Deck ${total} — ${cfg.deckMin}–${cfg.deckMax}?`,
-    answer:    isOversize ? `Over by ${total - cfg.deckMax}.` : isUndersize ? `Under by ${cfg.deckMin - total}.` : "In range.",
-    node:      sizeOk ? "yes" : "no",
-    highlight: !sizeOk,
-  });
-
-  steps.push({
-    question:  "Category ratios?",
-    answer:    allMet ? "All met." : `Gap: ${topNeed.label} +${Math.max(0, topNeed.delta)}`,
-    node:      allMet ? "yes" : "no",
-    highlight: !allMet,
-  });
-
-  const realAlerts = alerts.filter((a) => a.level !== "purge");
-  if (realAlerts.length > 0) {
-    const worst = realAlerts.find((a) => a.level === "critical") || realAlerts[0];
-    steps.push({
-      question:  "Sub-types?",
-      answer:    worst.text,
-      node:      worst.level === "critical" ? "no" : "warn",
-      highlight: true,
-    });
-  } else {
-    steps.push({
-      question:  "Sub-types?",
-      answer:    "ST/AoE + Block/Mit OK.",
-      node:      "yes",
-      highlight: false,
-    });
-  }
-
-  if (isOversize && allMet) {
-    steps.push({ question: "Action?", answer: "SKIP. Full and balanced.", node: "active", highlight: true });
-  } else if (allMet && !isUndersize) {
-    steps.push({ question: "Action?", answer: "SKIP unless strict upgrade.", node: "active", highlight: true });
-  } else if (isOversize) {
-    steps.push({ question: "Action?", answer: `Exceptional ${topNeed.label.toLowerCase()} only, then remove.`, node: "active", highlight: true });
-  } else if (topNeed.delta > 0) {
-    steps.push({ question: "Action?", answer: `PICK ${topNeed.label.toUpperCase()}.`, node: "active", highlight: true });
-  } else {
-    steps.push({ question: "Action?", answer: "SKIP unless upgrade.", node: "active", highlight: true });
-  }
-
-  $("flowchart").innerHTML = steps.map((step, i) => `
-    <div class="flow-step">
-      <div class="flow-node flow-node--${step.node}">${i + 1}</div>
-      <div>
-        <div class="flow-question">${step.question}</div>
-        <div class="flow-answer${step.highlight ? " flow-answer--highlight" : ""}">${step.answer}</div>
-      </div>
-    </div>
-    ${i < steps.length - 1 ? '<div class="flow-connector"></div>' : ""}`
+  $("flowchart").innerHTML = s.map((x, i) =>
+    `<div class="flow-step"><div class="flow-node flow-node--${x.n}">${i + 1}</div><div><div class="flow-question">${x.q}</div><div class="flow-answer${x.h ? " flow-answer--highlight" : ""}">${x.a}</div></div></div>${i < s.length - 1 ? '<div class="flow-connector"></div>' : ""}`
   ).join("");
 }
-
-// ---------------------------------------------------------------------------
-// Boot — splash screen is visible by default, no update() until char selected
-// ---------------------------------------------------------------------------
