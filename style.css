@@ -153,7 +153,7 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 0.35em;
-  height: 7em;
+  height: 10em;
   overflow-y: auto;
 }
 
@@ -401,7 +401,7 @@ body::before {
 .verdict {
   border-radius: 7px;
   padding: 0.75em;
-  height: 7em;
+  height: 10em;
   text-align: center;
   border: 2px solid var(--border);
   background: var(--surface);
