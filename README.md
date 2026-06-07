@@ -77,4 +77,6 @@ README.md    — this file
 
 ## License
 
-MIT
+[PolyForm Noncommercial License 1.0.0](LICENSE.md)
+
+Free to use, modify, and share for any **noncommercial** purpose — personal use, hobby projects, study, and noncommercial community sites are all fine. **Commercial use is not permitted**, so gaming sites and similar may not monetize this tool or host it for commercial gain.
