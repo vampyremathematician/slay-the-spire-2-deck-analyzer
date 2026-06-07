@@ -53,7 +53,13 @@
     <header class="header">
       <div class="header__top">
         <button class="new-run-btn" id="new-run-btn">← New Run</button>
-        <span class="header__char" id="header-char"></span>
+        <div class="header__right">
+          <span class="header__char" id="header-char"></span>
+          <div class="mode-toggle" id="mode-toggle">
+            <button class="mode-btn active" data-mode="basic">Basic</button>
+            <button class="mode-btn" data-mode="advanced">Advanced</button>
+          </div>
+        </div>
       </div>
       <h1>Deck Advisor</h1>
       <span class="header__sub">Slay the Spire 2</span>
@@ -235,6 +241,16 @@
         <div class="flowchart" id="flowchart"></div>
       </section>
     </div>
+
+    <!-- Engines Panel (Advanced Mode only) -->
+    <section class="engines hidden" id="engines-panel">
+      <div class="engines__header">
+        <h3 class="breakdown__header" style="margin-bottom: 0;">Scaling Engines</h3>
+        <span class="engines__sub" id="engines-char-label"></span>
+      </div>
+      <p class="engines__note">Count cards feeding each engine. The tool flags if no engine is developing — it won't tell you which to build.</p>
+      <div class="engines__grid" id="engines-grid"></div>
+    </section>
 
     <!-- Breakdown -->
     <section class="breakdown">

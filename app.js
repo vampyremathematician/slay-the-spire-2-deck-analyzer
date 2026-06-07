@@ -4,10 +4,6 @@
 
 // ---------------------------------------------------------------------------
 // Character Starting Decks
-//
-//   basicSt/basicBlk — starter Strikes/Defends
-//   extra — unique starters, auto-categorized by card type:
-//           Attack → st, Skill → blk or velocity sub
 // ---------------------------------------------------------------------------
 
 const CHARACTERS = {
@@ -39,29 +35,40 @@ const CHARACTERS = {
 };
 
 // ---------------------------------------------------------------------------
+// Class-Specific Scaling Engines (Advanced Mode)
+//
+//   These are the known archetype engines per class. Advanced Mode counts
+//   cards feeding each and flags if NONE is developing. It does NOT rank
+//   engines or rate cards — that would be a tier list.
+// ---------------------------------------------------------------------------
+
+const CHARACTER_ENGINES = {
+  ironclad:    ["Strength", "Vulnerable", "Exhaust", "Block Retain"],
+  silent:      ["Poison", "Shivs", "Discard"],
+  defect:      ["Lightning", "Frost / Focus", "Powers"],
+  regent:      ["Star Generation", "Star Spending"],
+  necrobinder: ["Summons / Osty", "Souls"],
+};
+
+// ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
-let currentAct = 1;
+let currentAct  = 1;
 let currentChar = null;
-let basicMax = { st: 0, blk: 0 };
+let mode        = "basic";        // "basic" | "advanced"
+let basicMax    = { st: 0, blk: 0 };
 
 const counts = {
-  st:          0,
-  aoe:         0,
-  blk:         0,
-  mit:         0,
-  velDraw:     0,
-  velEnergy:   0,
-  velPowers:   0,
-  velResource: 0,
-  curse:       0,
-  quest:       0,
-  basicSt:     0,
-  basicBlk:    0,
-  modSt:       0,
-  modBlk:      0,
+  st: 0, aoe: 0, blk: 0, mit: 0,
+  velDraw: 0, velEnergy: 0, velPowers: 0, velResource: 0,
+  curse: 0, quest: 0,
+  basicSt: 0, basicBlk: 0, modSt: 0, modBlk: 0,
 };
+
+let engineCounts = {};            // keyed by engine name, reset per character
+
+const STORAGE_KEY = "sts2-deck-advisor-v1";
 
 // ---------------------------------------------------------------------------
 // Per-Act Configuration
@@ -99,13 +106,45 @@ const ACT_CONFIG = {
 // ---------------------------------------------------------------------------
 
 const $ = (id) => document.getElementById(id);
+const setText  = (id, t) => { const el = $(id); if (el) el.textContent = t; };
+const setWidth = (id, p) => { const el = $(id); if (el) el.style.width = p + "%"; };
 
-function setText(id, text) {
-  $(id).textContent = text;
+// ---------------------------------------------------------------------------
+// localStorage persistence (degrades gracefully where unavailable)
+// ---------------------------------------------------------------------------
+
+function saveState() {
+  if (!currentChar) return;
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      currentAct, currentChar, mode, basicMax, counts, engineCounts,
+    }));
+  } catch (e) {
+    /* localStorage blocked (e.g. preview sandbox) — run continues, just no save */
+  }
 }
 
-function setWidth(id, pct) {
-  $(id).style.width = pct + "%";
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || !s.currentChar || !CHARACTERS[s.currentChar]) return false;
+
+    currentChar = s.currentChar;
+    currentAct  = s.currentAct || 1;
+    mode        = s.mode || "basic";
+    basicMax    = s.basicMax || { st: 0, blk: 0 };
+    Object.assign(counts, s.counts || {});
+    engineCounts = s.engineCounts || {};
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function clearState() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* ignore */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -119,48 +158,112 @@ document.getElementById("char-grid").addEventListener("click", (e) => {
 });
 
 document.getElementById("new-run-btn").addEventListener("click", () => {
+  clearState();
   $("app").classList.add("hidden");
   $("splash").classList.remove("hidden");
   currentChar = null;
 });
 
+function initEngines(charKey) {
+  engineCounts = {};
+  (CHARACTER_ENGINES[charKey] || []).forEach((name) => { engineCounts[name] = 0; });
+}
+
 function startRun(charKey) {
   const char = CHARACTERS[charKey];
   if (!char) return;
 
-  currentChar = charKey;
+  currentChar  = charKey;
   basicMax.st  = char.basicSt;
   basicMax.blk = char.basicBlk;
 
-  // Reset all counts
   for (const key of Object.keys(counts)) counts[key] = 0;
 
-  // Main grid = non-basic cards only (unique starters)
   counts.st          = char.extra.st          || 0;
   counts.blk         = char.extra.blk         || 0;
   counts.velDraw     = char.extra.velDraw     || 0;
   counts.velEnergy   = char.extra.velEnergy   || 0;
   counts.velPowers   = char.extra.velPowers   || 0;
   counts.velResource = char.extra.velResource || 0;
+  counts.basicSt     = char.basicSt;
+  counts.basicBlk    = char.basicBlk;
 
-  // Basics tracked separately
-  counts.basicSt  = char.basicSt;
-  counts.basicBlk = char.basicBlk;
+  initEngines(charKey);
 
-  // Reset act
   currentAct = 1;
+  enterApp();
+  saveState();
+}
+
+// Shared logic for entering the main app (used by startRun and restore)
+function enterApp() {
+  const char = CHARACTERS[currentChar];
+  setText("header-char", char.name);
+
+  // Act buttons
   document.querySelectorAll(".act-btn").forEach((b, i) => {
-    b.classList.toggle("active", i === 0);
+    b.classList.toggle("active", i === currentAct - 1);
+  });
+  // Mode buttons
+  document.querySelectorAll(".mode-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.mode === mode);
   });
 
-  setText("header-char", char.name);
+  buildEnginePanel();
+  applyMode();
+
   $("splash").classList.add("hidden");
   $("app").classList.remove("hidden");
   update();
 }
 
 // ---------------------------------------------------------------------------
-// Event wiring
+// Mode toggle
+// ---------------------------------------------------------------------------
+
+document.getElementById("mode-toggle").addEventListener("click", (e) => {
+  const btn = e.target.closest(".mode-btn");
+  if (!btn) return;
+  mode = btn.dataset.mode;
+  document.querySelectorAll(".mode-btn").forEach((b) => {
+    b.classList.toggle("active", b.dataset.mode === mode);
+  });
+  applyMode();
+  update();
+  saveState();
+});
+
+function applyMode() {
+  $("engines-panel").classList.toggle("hidden", mode !== "advanced");
+}
+
+// ---------------------------------------------------------------------------
+// Engine panel
+// ---------------------------------------------------------------------------
+
+function buildEnginePanel() {
+  const grid = $("engines-grid");
+  const engines = CHARACTER_ENGINES[currentChar] || [];
+  setText("engines-char-label", CHARACTERS[currentChar].name);
+
+  grid.innerHTML = engines.map((name) => `
+    <div class="engine-card" data-engine-card="${name}">
+      <span class="engine-card__name">${name}</span>
+      <div class="stepper stepper--mini">
+        <button class="stepper__btn stepper__btn--mini" data-engine="${name}" data-delta="-1">−</button>
+        <span class="stepper__count stepper__count--mini engine-card__count" id="engine-${slug(name)}-count">0</span>
+        <button class="stepper__btn stepper__btn--mini" data-engine="${name}" data-delta="1">+</button>
+      </div>
+    </div>`
+  ).join("");
+}
+
+function slug(name) {
+  return name.replace(/[^a-zA-Z0-9]/g, "");
+}
+
+// ---------------------------------------------------------------------------
+// Event wiring — acts and steppers
 // ---------------------------------------------------------------------------
 
 document.getElementById("act-bar").addEventListener("click", (e) => {
@@ -171,32 +274,49 @@ document.getElementById("act-bar").addEventListener("click", (e) => {
     b.classList.toggle("active", i === currentAct - 1);
   });
   update();
+  saveState();
 });
 
 document.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-key][data-delta]");
+  const btn = e.target.closest("[data-delta]");
   if (!btn) return;
-  const key   = btn.dataset.key;
   const delta = Number(btn.dataset.delta);
-  if (!(key in counts)) return;
 
+  if (btn.dataset.engine !== undefined) {
+    const name = btn.dataset.engine;
+    engineCounts[name] = Math.max(0, (engineCounts[name] || 0) + delta);
+    update();
+    saveState();
+    return;
+  }
+
+  const key = btn.dataset.key;
+  if (!key || !(key in counts)) return;
   counts[key] = Math.max(0, counts[key] + delta);
 
-  // Cap basics and mods
   if (key === "basicSt")  counts.basicSt  = Math.min(counts.basicSt,  basicMax.st);
   if (key === "basicBlk") counts.basicBlk = Math.min(counts.basicBlk, basicMax.blk);
   if (key === "modSt")    counts.modSt    = Math.min(counts.modSt,    basicMax.st);
   if (key === "modBlk")   counts.modBlk   = Math.min(counts.modBlk,   basicMax.blk);
 
   update();
+  saveState();
 });
 
 // ---------------------------------------------------------------------------
-// Velocity total helper
+// Helpers
 // ---------------------------------------------------------------------------
 
 function velocityTotal() {
   return counts.velDraw + counts.velEnergy + counts.velPowers + counts.velResource;
+}
+
+function topEngine() {
+  let max = 0, name = null;
+  for (const [k, v] of Object.entries(engineCounts)) {
+    if (v > max) { max = v; name = k; }
+  }
+  return { name, count: max };
 }
 
 // ---------------------------------------------------------------------------
@@ -214,9 +334,13 @@ function update() {
   const total      = functional + dead;
 
   // Counter displays
-  for (const key of Object.keys(counts)) {
-    const el = $(key + "-count");
-    if (el) el.textContent = counts[key];
+  for (const key of Object.keys(counts)) setText(key + "-count", counts[key]);
+
+  // Engine displays
+  for (const [name, val] of Object.entries(engineCounts)) {
+    setText("engine-" + slug(name) + "-count", val);
+    const card = document.querySelector(`[data-engine-card="${name}"]`);
+    if (card) card.className = "engine-card " + (val >= 2 ? "engine-card--active" : "engine-card--dormant");
   }
 
   // Deck meta
@@ -228,16 +352,13 @@ function update() {
   if (dead > 0) {
     const pClean = deadDrawProbability(functional, total);
     deadEl.textContent = `${dead} dead (~${Math.round((1 - pClean) * 100)}% per hand)`;
-  } else {
-    deadEl.textContent = "";
-  }
+  } else deadEl.textContent = "";
 
   // Ratio bar
   const pO = total ? (offense / total) * 100 : 0;
   const pD = total ? (defense / total) * 100 : 0;
   const pV = total ? (vel / total) * 100 : 0;
   const pX = total ? (dead / total) * 100 : 0;
-
   setWidth("bar-offense", pO); setWidth("bar-defense", pD);
   setWidth("bar-velocity", pV); setWidth("bar-dead", pX);
   setText("pct-offense", Math.round(pO) + "%"); setText("pct-defense", Math.round(pD) + "%");
@@ -249,7 +370,6 @@ function update() {
   const tD = Math.round(ref * cfg.defensePct);
   const tV = Math.round(ref * cfg.velocityPct);
   const dO = tO - offense, dD = tD - defense, dV = tV - vel;
-
   renderTargetCell("off", offense, tO, dO);
   renderTargetCell("def", defense, tD, dD);
   renderTargetCell("vel", vel, tV, dV);
@@ -265,14 +385,13 @@ function update() {
     { type: "vel", label: "Velocity", delta: dV, icon: "⚡" },
   ].sort((a, b) => b.delta - a.delta);
 
-  const isOversize  = total > cfg.deckMax;
-  const isUndersize = functional < cfg.deckMin;
-  const allMet      = dO <= 0 && dD <= 0 && dV <= 0;
-  const topNeed     = needs[0];
+  const over = total > cfg.deckMax, under = functional < cfg.deckMin;
+  const allMet = dO <= 0 && dD <= 0 && dV <= 0;
+  const top = needs[0];
 
-  renderVerdict(resolveVerdict(cfg, total, isOversize, isUndersize, allMet, topNeed, offense, defense));
+  renderVerdict(resolveVerdict(cfg, total, over, under, allMet, top, offense, defense));
   renderPriorityList(needs, allMet);
-  renderFlowchart(cfg, total, isOversize, isUndersize, allMet, topNeed, alerts);
+  renderFlowchart(cfg, total, over, under, allMet, top, alerts);
   $("tips").innerHTML = cfg.tip;
 }
 
@@ -307,33 +426,33 @@ function buildAlerts(cfg, offense, defense, dead, total) {
   const alerts = [];
   const vel = velocityTotal();
   const totalBlk = counts.blk + counts.basicBlk + counts.modBlk;
-  const totalSt  = counts.st + counts.basicSt + counts.modSt;
 
-  // AoE
   if (offense > 0 && counts.aoe === 0)
     alerts.push({ level: currentAct >= 2 ? "critical" : "warn", icon: "⚔️", text: "No AoE — multi-enemy fights will stall." });
   else if (offense >= 3 && counts.aoe < cfg.aoeFloor)
     alerts.push({ level: "warn", icon: "⚔️", text: `Only ${counts.aoe} AoE in ${offense} offense. Target ${cfg.aoeFloor}+.` });
 
-  // Block
   if (defense > 0 && totalBlk === 0)
     alerts.push({ level: "critical", icon: "🛡️", text: "No block — mitigation alone won't stop damage." });
   else if (defense >= 3 && totalBlk / defense < cfg.blockFloorPct)
     alerts.push({ level: "warn", icon: "🛡️", text: `Block ${Math.round((totalBlk / defense) * 100)}% — need >${Math.round(cfg.blockFloorPct * 100)}%.` });
 
-  // Mitigation
   if (defense > 0 && counts.mit === 0 && currentAct >= 2)
     alerts.push({ level: "warn", icon: "🛡️", text: "No mitigation — pure block overwhelmed late." });
 
-  // Dead
+  // Advanced: no scaling engine developing (only flags from Act 2 on)
+  if (mode === "advanced" && currentAct >= 2) {
+    const eng = topEngine();
+    if (eng.count < 2)
+      alerts.push({ level: "critical", icon: "⚙️", text: "No scaling engine developing — deck may stall against high-HP enemies." });
+  }
+
   if (dead > 0) {
     const pct = Math.round((1 - deadDrawProbability(offense + defense + vel, total)) * 100);
     alerts.push({ level: "purge", icon: "🔥",
-      text: dead >= 2 ? `${dead} dead cards (~${pct}% per hand) — purge ASAP.` : `1 dead card (~${pct}% per hand) — purge at shop.`
-    });
+      text: dead >= 2 ? `${dead} dead cards (~${pct}% per hand) — purge ASAP.` : `1 dead card (~${pct}% per hand) — purge at shop.` });
   }
 
-  // Basics remaining
   const basicsLeft = counts.basicSt + counts.basicBlk;
   if (basicsLeft > 0)
     alerts.push({ level: "warn", icon: "🗑️", text: `${basicsLeft} unmodified basic${basicsLeft > 1 ? "s" : ""} (${counts.basicSt}S / ${counts.basicBlk}D)` });
@@ -425,9 +544,18 @@ function renderFlowchart(cfg, total, over, under, allMet, top, alerts) {
   const s = [], ok = total >= cfg.deckMin && total <= cfg.deckMax;
   s.push({ q: `Deck ${total} — ${cfg.deckMin}–${cfg.deckMax}?`, a: over ? `Over by ${total - cfg.deckMax}.` : under ? `Under by ${cfg.deckMin - total}.` : "In range.", n: ok ? "yes" : "no", h: !ok });
   s.push({ q: "Category ratios?", a: allMet ? "All met." : `Gap: ${top.label} +${Math.max(0, top.delta)}`, n: allMet ? "yes" : "no", h: !allMet });
-  const real = alerts.filter(a => a.level !== "purge" && a.level !== "warn" || !a.text.includes("unmodified"));
-  if (real.length) { const w = real.find(a => a.level === "critical") || real[0]; s.push({ q: "Sub-types?", a: w.text, n: w.level === "critical" ? "no" : "warn", h: true }); }
+
+  const subAlerts = alerts.filter(a => a.icon === "⚔️" || a.icon === "🛡️");
+  if (subAlerts.length) { const w = subAlerts.find(a => a.level === "critical") || subAlerts[0]; s.push({ q: "Sub-types?", a: w.text, n: w.level === "critical" ? "no" : "warn", h: true }); }
   else s.push({ q: "Sub-types?", a: "ST/AoE + Block/Mit OK.", n: "yes", h: false });
+
+  // Advanced: engine step
+  if (mode === "advanced") {
+    const eng = topEngine();
+    if (eng.count >= 2) s.push({ q: "Engine?", a: `${eng.name} developing (${eng.count}).`, n: "yes", h: false });
+    else s.push({ q: "Engine?", a: "No scaling engine yet — risk of stalling late.", n: currentAct >= 2 ? "no" : "warn", h: true });
+  }
+
   if (over && allMet) s.push({ q: "Action?", a: "SKIP. Full and balanced.", n: "active", h: true });
   else if (allMet && !under) s.push({ q: "Action?", a: "SKIP unless strict upgrade.", n: "active", h: true });
   else if (over) s.push({ q: "Action?", a: `Exceptional ${top.label.toLowerCase()} only, then remove.`, n: "active", h: true });
@@ -437,4 +565,12 @@ function renderFlowchart(cfg, total, over, under, allMet, top, alerts) {
   $("flowchart").innerHTML = s.map((x, i) =>
     `<div class="flow-step"><div class="flow-node flow-node--${x.n}">${i + 1}</div><div><div class="flow-question">${x.q}</div><div class="flow-answer${x.h ? " flow-answer--highlight" : ""}">${x.a}</div></div></div>${i < s.length - 1 ? '<div class="flow-connector"></div>' : ""}`
   ).join("");
+}
+
+// ---------------------------------------------------------------------------
+// Boot — restore a saved run if present, otherwise show splash
+// ---------------------------------------------------------------------------
+
+if (loadState()) {
+  enterApp();
 }
